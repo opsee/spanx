@@ -1,0 +1,131 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/aws/aws-sdk-go/aws",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "4f9a300f2af32035b3ae8bd0ce9b0fe8412df743",
+			"branch": "master",
+			"path": "/aws"
+		},
+		{
+			"importpath": "github.com/aws/aws-sdk-go/private/endpoints",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "4f9a300f2af32035b3ae8bd0ce9b0fe8412df743",
+			"branch": "master",
+			"path": "/private/endpoints"
+		},
+		{
+			"importpath": "github.com/aws/aws-sdk-go/private/protocol/query",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "4f9a300f2af32035b3ae8bd0ce9b0fe8412df743",
+			"branch": "master",
+			"path": "/private/protocol/query"
+		},
+		{
+			"importpath": "github.com/aws/aws-sdk-go/private/protocol/rest",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "4f9a300f2af32035b3ae8bd0ce9b0fe8412df743",
+			"branch": "master",
+			"path": "/private/protocol/rest"
+		},
+		{
+			"importpath": "github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "4f9a300f2af32035b3ae8bd0ce9b0fe8412df743",
+			"branch": "master",
+			"path": "/private/protocol/xml/xmlutil"
+		},
+		{
+			"importpath": "github.com/aws/aws-sdk-go/private/signer/v4",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "4f9a300f2af32035b3ae8bd0ce9b0fe8412df743",
+			"branch": "master",
+			"path": "/private/signer/v4"
+		},
+		{
+			"importpath": "github.com/aws/aws-sdk-go/private/waiter",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "4f9a300f2af32035b3ae8bd0ce9b0fe8412df743",
+			"branch": "master",
+			"path": "/private/waiter"
+		},
+		{
+			"importpath": "github.com/aws/aws-sdk-go/service/iam",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "4f9a300f2af32035b3ae8bd0ce9b0fe8412df743",
+			"branch": "master",
+			"path": "/service/iam"
+		},
+		{
+			"importpath": "github.com/aws/aws-sdk-go/service/sts",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "4f9a300f2af32035b3ae8bd0ce9b0fe8412df743",
+			"branch": "master",
+			"path": "/service/sts"
+		},
+		{
+			"importpath": "github.com/go-ini/ini",
+			"repository": "https://github.com/go-ini/ini",
+			"revision": "afbd495e5aaea13597b5e14fe514ddeaa4d76fc3",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/jmespath/go-jmespath",
+			"repository": "https://github.com/jmespath/go-jmespath",
+			"revision": "c01cf91b011868172fdcd9f41838e80c9d716264",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/jmoiron/sqlx",
+			"repository": "https://github.com/jmoiron/sqlx",
+			"revision": "54aec3fd91a2b2129ffaca0d652b8a9223ee2d9e",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/julienschmidt/httprouter",
+			"repository": "https://github.com/julienschmidt/httprouter",
+			"revision": "21439ef4d70ba4f3e2a5ed9249e7b03af4019b40",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/lib/pq",
+			"repository": "https://github.com/lib/pq",
+			"revision": "11fc39a580a008f1f39bb3d11d984fb34ed778d9",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/opsee/basic",
+			"repository": "https://github.com/opsee/basic",
+			"revision": "1f80bb9199e789b2f46765ebaf7f3b3960476aae",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/sirupsen/logrus",
+			"repository": "https://github.com/sirupsen/logrus",
+			"revision": "446d1c146faa8ed3f4218f056fcd165f6bcfda81",
+			"branch": "master"
+		},
+		{
+			"importpath": "golang.org/x/crypto/bcrypt",
+			"repository": "https://go.googlesource.com/crypto",
+			"revision": "552e9d568fde9701ea1944fb01c8aadaceaa7353",
+			"branch": "master",
+			"path": "/bcrypt"
+		},
+		{
+			"importpath": "golang.org/x/crypto/blowfish",
+			"repository": "https://go.googlesource.com/crypto",
+			"revision": "552e9d568fde9701ea1944fb01c8aadaceaa7353",
+			"branch": "master",
+			"path": "/blowfish"
+		},
+		{
+			"importpath": "golang.org/x/net/context",
+			"repository": "https://go.googlesource.com/net",
+			"revision": "1ade16a5450925b7496e1031938175d1f5d30d31",
+			"branch": "master",
+			"path": "/context"
+		}
+	]
+}

@@ -1,0 +1,2 @@
+SPANX_ADDRESS=:9095
+POSTGRES_CONN=postgres://postgres@postgresql/spanx_test?sslmode=disable
