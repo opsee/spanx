@@ -11,12 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/cenkalti/backoff"
 	"github.com/opsee/basic/com"
 	"github.com/opsee/spanx/store"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 var (
@@ -24,7 +26,7 @@ var (
 	arnRegexp  = regexp.MustCompile(`^arn:aws:iam::(\d{12}):user.+$`)
 
 	AccountNotFound         = errors.New("AWS account for that customer not found.")
-	InsufficientPermissions = errors.New("IAM role or user provided has insufficient permissions to provision a role.")
+	InsufficientPermissions = fmt.Errorf("IAM role or user provided has insufficient permissions to provision a role. The minimum policy required to launch Opsee is:\n%s", UserPolicy)
 )
 
 func init() {
@@ -133,16 +135,6 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 	}
 
 	// time 2 provision a policy / role for us in their aws account
-	_, err = iamClient.CreatePolicy(&iam.CreatePolicyInput{
-		PolicyDocument: aws.String(Policy),
-		PolicyName:     aws.String(PolicyName),
-		Description:    aws.String("A policy for Opsee monitoring"),
-	})
-
-	if err = handleAWSError("CreatePolicy", err); err != nil {
-		return creds, err
-	}
-
 	_, err = iamClient.CreateRole(&iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(fmt.Sprintf(AssumeRolePolicy, customerID)),
 		RoleName:                 aws.String(RoleName),
@@ -152,12 +144,13 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 		return creds, err
 	}
 
-	_, err = iamClient.AttachRolePolicy(&iam.AttachRolePolicyInput{
-		PolicyArn: aws.String(policyARN(account)),
-		RoleName:  aws.String(RoleName),
+	_, err = iamClient.PutRolePolicy(&iam.PutRolePolicyInput{
+		PolicyDocument: aws.String(Policy),
+		PolicyName:     aws.String(PolicyName),
+		RoleName:       aws.String(RoleName),
 	})
 
-	if err = handleAWSError("AttachRolePolicy", err); err != nil {
+	if err = handleAWSError("PutRolePolicy", err); err != nil {
 		return creds, err
 	}
 
@@ -188,13 +181,43 @@ func deleteAccountCredentials(db store.Store, account *com.Account) error {
 }
 
 func getAccountCredentials(db store.Store, account *com.Account) (credentials.Value, error) {
+	var (
+		creds credentials.Value
+		err   error
+	)
+
 	if account != nil {
-		return stscreds.NewCredentials(awsSession, roleARN(account), func(arp *stscreds.AssumeRoleProvider) {
-			arp.ExternalID = aws.String(account.CustomerID)
-		}).Get()
+		backoff.Retry(func() error {
+			creds, err = stscreds.NewCredentials(awsSession, roleARN(account), func(arp *stscreds.AssumeRoleProvider) {
+				arp.ExternalID = aws.String(account.CustomerID)
+			}).Get()
+
+			if err != nil {
+				return err
+			}
+
+			err = nil
+			return nil
+
+		}, &backoff.ExponentialBackOff{
+			InitialInterval:     100 * time.Millisecond,
+			RandomizationFactor: 0.5,
+			Multiplier:          1.5,
+			MaxInterval:         time.Second,
+			MaxElapsedTime:      10 * time.Second,
+			Clock:               &systemClock{},
+		})
+
+		return creds, err
 	} else {
-		return credentials.Value{}, AccountNotFound
+		return creds, AccountNotFound
 	}
+}
+
+type systemClock struct{}
+
+func (s *systemClock) Now() time.Time {
+	return time.Now()
 }
 
 func handleAWSError(meth string, err error) error {

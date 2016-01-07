@@ -65,6 +65,12 @@
 			"path": "/service/sts"
 		},
 		{
+			"importpath": "github.com/cenkalti/backoff",
+			"repository": "https://github.com/cenkalti/backoff",
+			"revision": "4dc77674aceaabba2c7e3da25d4c823edfb73f99",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/go-ini/ini",
 			"repository": "https://github.com/go-ini/ini",
 			"revision": "afbd495e5aaea13597b5e14fe514ddeaa4d76fc3",

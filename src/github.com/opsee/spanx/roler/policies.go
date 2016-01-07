@@ -1,8 +1,8 @@
 package roler
 
 const (
-	PolicyName = "OpseePolicy"
 	RoleName   = "OpseeRole"
+	PolicyName = "OpseePolicy"
 
 	UserPolicy = `{
     "Version": "2012-10-17",
@@ -11,13 +11,8 @@ const (
             "Effect": "Allow",
             "Action": [
                 "iam:CreateRole",
-                "iam:DeleteInstanceProfile",
-                "iam:DeleteRole",
-                "iam:DeleteRolePolicy",
-                "iam:GetRole",
-                "iam:PassRole",
-                "iam:PutRolePolicy",
-                "iam:RemoveRoleFromInstanceProfile"
+                "iam:GetUser",
+                "iam:PutRolePolicy"
             ],
             "Resource": "*"
         }
@@ -38,6 +33,13 @@ const (
           "sts:ExternalId": "%s"
         }
       }
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": ["ec2.amazonaws.com"]
+      },
+      "Action": [ "sts:AssumeRole" ]
     }
   ]
 }
