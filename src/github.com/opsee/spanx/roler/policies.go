@@ -74,6 +74,8 @@ const (
     "ec2:DescribeSubnets",
     "ec2:DescribeVpcs",
     "ec2:DescribeInstances",
+    "ec2:DescribeInternetGateways",
+    "ec2:DescribeRouteTables",
     "elasticloadbalancing:DescribeLoadBalancers",
     "iam:AddRoleToInstanceProfile",
     "iam:RemoveRoleFromInstanceProfile",
