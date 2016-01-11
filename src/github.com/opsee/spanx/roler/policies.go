@@ -12,7 +12,8 @@ const (
             "Action": [
                 "iam:CreateRole",
                 "iam:GetUser",
-                "iam:PutRolePolicy"
+                "iam:CreatePolicy",
+		"iam:AttachRolePolicy"
             ],
             "Resource": "*"
         }
