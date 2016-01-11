@@ -135,16 +135,6 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 	}
 
 	// time 2 provision a policy / role for us in their aws account
-	_, err = iamClient.CreatePolicy(&iam.CreatePolicyInput{
-		PolicyDocument: aws.String(Policy),
-		PolicyName:     aws.String(PolicyName),
-		Description:    aws.String("A policy for Opsee monitoring"),
-	})
-
-	if err = handleAWSError("CreatePolicy", err); err != nil {
-		return creds, err
-	}
-
 	_, err = iamClient.CreateRole(&iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(fmt.Sprintf(AssumeRolePolicy, customerID)),
 		RoleName:                 aws.String(RoleName),
@@ -154,12 +144,13 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 		return creds, err
 	}
 
-	_, err = iamClient.AttachRolePolicy(&iam.AttachRolePolicyInput{
-		PolicyArn: aws.String(policyARN(account)),
-		RoleName:  aws.String(RoleName),
+	_, err = iamClient.PutRolePolicy(&iam.PutRolePolicyInput{
+		PolicyDocument: aws.String(Policy),
+		PolicyName:     aws.String(PolicyName),
+		RoleName:       aws.String(RoleName),
 	})
 
-	if err = handleAWSError("AttachRolePolicy", err); err != nil {
+	if err = handleAWSError("PutRolePolicy", err); err != nil {
 		return creds, err
 	}
 
