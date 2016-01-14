@@ -1,9 +1,6 @@
 package roler
 
 const (
-	RoleName   = "OpseeRole"
-	PolicyName = "OpseePolicy"
-
 	UserPolicy = `{
     "Version": "2012-10-17",
     "Statement": [

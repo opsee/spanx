@@ -51,6 +51,13 @@
 			"path": "/private/waiter"
 		},
 		{
+			"importpath": "github.com/aws/aws-sdk-go/service/elb",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "6811074135399057ee6a6c457b2f23fbd6a067d6",
+			"branch": "master",
+			"path": "/service/elb"
+		},
+		{
 			"importpath": "github.com/aws/aws-sdk-go/service/iam",
 			"repository": "https://github.com/aws/aws-sdk-go",
 			"revision": "4f9a300f2af32035b3ae8bd0ce9b0fe8412df743",
@@ -103,7 +110,7 @@
 		{
 			"importpath": "github.com/opsee/basic",
 			"repository": "https://github.com/opsee/basic",
-			"revision": "1f80bb9199e789b2f46765ebaf7f3b3960476aae",
+			"revision": "7234ba6bc9fc7ddb60d06ed6647faacbb10ddeed",
 			"branch": "master"
 		},
 		{

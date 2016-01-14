@@ -137,7 +137,7 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 	// time 2 provision a policy / role for us in their aws account
 	_, err = iamClient.CreateRole(&iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(fmt.Sprintf(AssumeRolePolicy, customerID)),
-		RoleName:                 aws.String(RoleName),
+		RoleName:                 aws.String(account.RoleName()),
 	})
 
 	if err = handleAWSError("CreateRole", err); err != nil {
@@ -146,8 +146,8 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 
 	_, err = iamClient.PutRolePolicy(&iam.PutRolePolicyInput{
 		PolicyDocument: aws.String(Policy),
-		PolicyName:     aws.String(PolicyName),
-		RoleName:       aws.String(RoleName),
+		PolicyName:     aws.String(account.PolicyName()),
+		RoleName:       aws.String(account.RoleName()),
 	})
 
 	if err = handleAWSError("PutRolePolicy", err); err != nil {
@@ -188,7 +188,7 @@ func getAccountCredentials(db store.Store, account *com.Account) (credentials.Va
 
 	if account != nil {
 		backoff.Retry(func() error {
-			creds, err = stscreds.NewCredentials(awsSession, roleARN(account), func(arp *stscreds.AssumeRoleProvider) {
+			creds, err = stscreds.NewCredentials(awsSession, account.RoleARN(), func(arp *stscreds.AssumeRoleProvider) {
 				arp.ExternalID = aws.String(account.CustomerID)
 			}).Get()
 
@@ -248,14 +248,6 @@ func parseARNAccount(arn string) (int, error) {
 	}
 
 	return id, nil
-}
-
-func roleARN(a *com.Account) string {
-	return fmt.Sprintf("arn:aws:iam::%d:role/%s", a.ID, RoleName)
-}
-
-func policyARN(a *com.Account) string {
-	return fmt.Sprintf("arn:aws:iam::%d:policy/%s", a.ID, PolicyName)
 }
 
 func getEnvRegion() string {
