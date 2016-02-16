@@ -23,7 +23,7 @@ import (
 
 var (
 	awsSession *session.Session
-	arnRegexp  = regexp.MustCompile(`^arn:aws:iam::(\d{12}):user.+$`)
+	arnRegexp  = regexp.MustCompile(`^arn:aws:iam::(\d+):user.+$`)
 
 	AccountNotFound         = errors.New("AWS account for that customer not found.")
 	InsufficientPermissions = fmt.Errorf("IAM role or user provided has insufficient permissions to provision a role. The minimum policy required to launch Opsee is:\n%s", UserPolicy)
@@ -238,8 +238,12 @@ func handleAWSError(meth string, err error) error {
 
 func parseARNAccount(arn string) (int, error) {
 	matches := arnRegexp.FindStringSubmatch(arn)
+	if len(matches) < 2 {
+		return 0, fmt.Errorf("No account ID match in ARN: %s", arn)
+	}
+
 	if matches[1] == "" {
-		return 0, fmt.Errorf("No account ID match in ARN")
+		return 0, fmt.Errorf("No account ID match in ARN: %s", arn)
 	}
 
 	id, err := strconv.Atoi(matches[1])
