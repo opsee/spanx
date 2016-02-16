@@ -23,7 +23,7 @@ import (
 
 var (
 	awsSession *session.Session
-	arnRegexp  = regexp.MustCompile(`^arn:aws:iam::(\d+):user.+$`)
+	arnRegexp  = regexp.MustCompile(`^arn:aws:iam::(\d+):(user.+|root)$`)
 
 	AccountNotFound         = errors.New("AWS account for that customer not found.")
 	InsufficientPermissions = fmt.Errorf("IAM role or user provided has insufficient permissions to provision a role. The minimum policy required to launch Opsee is:\n%s", UserPolicy)
