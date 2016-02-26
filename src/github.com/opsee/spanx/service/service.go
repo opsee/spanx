@@ -2,10 +2,15 @@ package service
 
 import (
 	"errors"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/opsee/basic/com"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/opsee/basic/schema/aws/credentials"
+	opsee "github.com/opsee/basic/service"
 	"github.com/opsee/spanx/roler"
 	"github.com/opsee/spanx/store"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+	grpcauth "google.golang.org/grpc/credentials"
+	"net"
 )
 
 var (
@@ -16,56 +21,57 @@ var (
 	errUnknown          = errors.New("unknown error.")
 )
 
-type ResolveCredentialsRequest struct {
-	AccessKeyID     string
-	SecretAccessKey string
-}
-
-type CredentialsResponse struct {
-	Credentials credentials.Value
-}
-
-type Service interface {
-	ResolveCredentials(*com.User, *ResolveCredentialsRequest) (*CredentialsResponse, error)
-	GetCredentials(*com.User) (*CredentialsResponse, error)
-}
-
 type service struct {
 	db store.Store
 }
 
 func New(db store.Store) *service {
-	return &service{
-		db: db,
-	}
+	return &service{db}
 }
 
-func (s *service) ResolveCredentials(user *com.User, request *ResolveCredentialsRequest) (*CredentialsResponse, error) {
-	creds, err := roler.ResolveCredentials(s.db, user.CustomerID, request.AccessKeyID, request.SecretAccessKey)
+func (s *service) Start(listenAddr, cert, certkey string) error {
+	auth, err := grpcauth.NewServerTLSFromFile(cert, certkey)
+	if err != nil {
+		return err
+	}
+
+	server := grpc.NewServer(grpc.Creds(auth))
+	opsee.RegisterSpanxServer(server, s)
+
+	lis, err := net.Listen("tcp", listenAddr)
+	if err != nil {
+		return err
+	}
+
+	return server.Serve(lis)
+}
+
+func (s *service) PutRole(ctx context.Context, req *opsee.PutRoleRequest) (*opsee.PutRoleResponse, error) {
+	creds, err := roler.ResolveCredentials(s.db, req.User.CustomerId, req.Credentials.GetAccessKeyID(), req.Credentials.GetSecretAccessKey())
 	if err != nil {
 		return nil, err
 	}
 
-	return &CredentialsResponse{creds}, nil
+	return &opsee.PutRoleResponse{
+		Credentials: &credentials.Value{
+			AccessKeyID:     aws.String(creds.AccessKeyID),
+			SecretAccessKey: aws.String(creds.SecretAccessKey),
+			SessionToken:    aws.String(creds.SessionToken),
+		},
+	}, nil
 }
 
-func (s *service) GetCredentials(user *com.User) (*CredentialsResponse, error) {
-	creds, err := roler.GetCredentials(s.db, user.CustomerID)
+func (s *service) GetCredentials(ctx context.Context, req *opsee.GetCredentialsRequest) (*opsee.GetCredentialsResponse, error) {
+	creds, err := roler.GetCredentials(s.db, req.User.CustomerId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &CredentialsResponse{creds}, nil
-}
-
-func (request *ResolveCredentialsRequest) Validate() error {
-	if request.AccessKeyID == "" {
-		return errMissingAccessKey
-	}
-
-	if request.SecretAccessKey == "" {
-		return errMissingSecretKey
-	}
-
-	return nil
+	return &opsee.GetCredentialsResponse{
+		Credentials: &credentials.Value{
+			AccessKeyID:     aws.String(creds.AccessKeyID),
+			SecretAccessKey: aws.String(creds.SecretAccessKey),
+			SessionToken:    aws.String(creds.SessionToken),
+		},
+	}, nil
 }

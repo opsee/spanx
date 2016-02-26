@@ -16,6 +16,13 @@
 			"path": "/private/endpoints"
 		},
 		{
+			"importpath": "github.com/aws/aws-sdk-go/private/protocol",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "f3d9acd6d6b5dd65ca2cafadb45fff5f79dac525",
+			"branch": "master",
+			"path": "/private/protocol"
+		},
+		{
 			"importpath": "github.com/aws/aws-sdk-go/private/protocol/query",
 			"repository": "https://github.com/aws/aws-sdk-go",
 			"revision": "4f9a300f2af32035b3ae8bd0ce9b0fe8412df743",
@@ -51,6 +58,20 @@
 			"path": "/private/waiter"
 		},
 		{
+			"importpath": "github.com/aws/aws-sdk-go/service/autoscaling",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "f3d9acd6d6b5dd65ca2cafadb45fff5f79dac525",
+			"branch": "master",
+			"path": "/service/autoscaling"
+		},
+		{
+			"importpath": "github.com/aws/aws-sdk-go/service/ec2",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "f3d9acd6d6b5dd65ca2cafadb45fff5f79dac525",
+			"branch": "master",
+			"path": "/service/ec2"
+		},
+		{
 			"importpath": "github.com/aws/aws-sdk-go/service/elb",
 			"repository": "https://github.com/aws/aws-sdk-go",
 			"revision": "6811074135399057ee6a6c457b2f23fbd6a067d6",
@@ -63,6 +84,13 @@
 			"revision": "4f9a300f2af32035b3ae8bd0ce9b0fe8412df743",
 			"branch": "master",
 			"path": "/service/iam"
+		},
+		{
+			"importpath": "github.com/aws/aws-sdk-go/service/rds",
+			"repository": "https://github.com/aws/aws-sdk-go",
+			"revision": "f3d9acd6d6b5dd65ca2cafadb45fff5f79dac525",
+			"branch": "master",
+			"path": "/service/rds"
 		},
 		{
 			"importpath": "github.com/aws/aws-sdk-go/service/sts",
@@ -78,9 +106,49 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/dedis/protobuf",
+			"repository": "https://github.com/dedis/protobuf",
+			"revision": "6948fbd96a0f1e4e96582003261cf647dc66c831",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/go-ini/ini",
 			"repository": "https://github.com/go-ini/ini",
 			"revision": "afbd495e5aaea13597b5e14fe514ddeaa4d76fc3",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/gogo/protobuf/gogoproto",
+			"repository": "https://github.com/gogo/protobuf",
+			"revision": "ff05bbbb0ff143cc11fc3f8b700fc3a2864b884d",
+			"branch": "master",
+			"path": "/gogoproto"
+		},
+		{
+			"importpath": "github.com/gogo/protobuf/proto",
+			"repository": "https://github.com/gogo/protobuf",
+			"revision": "ff05bbbb0ff143cc11fc3f8b700fc3a2864b884d",
+			"branch": "master",
+			"path": "/proto"
+		},
+		{
+			"importpath": "github.com/gogo/protobuf/protoc-gen-gogo/descriptor",
+			"repository": "https://github.com/gogo/protobuf",
+			"revision": "ff05bbbb0ff143cc11fc3f8b700fc3a2864b884d",
+			"branch": "master",
+			"path": "/protoc-gen-gogo/descriptor"
+		},
+		{
+			"importpath": "github.com/golang/protobuf/proto",
+			"repository": "https://github.com/golang/protobuf",
+			"revision": "45760678a2e5102a51433d40069dbc9ec5b26753",
+			"branch": "master",
+			"path": "/proto"
+		},
+		{
+			"importpath": "github.com/graphql-go/graphql",
+			"repository": "https://github.com/graphql-go/graphql",
+			"revision": "26c58bd73a3cf9177fb534f57c9698a7bc6277a2",
 			"branch": "master"
 		},
 		{
@@ -110,8 +178,22 @@
 		{
 			"importpath": "github.com/opsee/basic",
 			"repository": "https://github.com/opsee/basic",
-			"revision": "890a9ecc83a5e358bcfe5426b89c202a00bf001a",
+			"revision": "3935cc1c54f7a333aa6a876ddbb62cdd1dea9bee",
 			"branch": "master"
+		},
+		{
+			"importpath": "github.com/opsee/protobuf/opseeproto",
+			"repository": "https://github.com/opsee/protobuf",
+			"revision": "90c72c25c41b2f8b1e1a210994a90e8ad36ad6db",
+			"branch": "master",
+			"path": "/opseeproto"
+		},
+		{
+			"importpath": "github.com/opsee/protobuf/plugin/graphql/scalars",
+			"repository": "https://github.com/opsee/protobuf",
+			"revision": "90c72c25c41b2f8b1e1a210994a90e8ad36ad6db",
+			"branch": "master",
+			"path": "/plugin/graphql/scalars"
 		},
 		{
 			"importpath": "github.com/sirupsen/logrus",
@@ -139,6 +221,33 @@
 			"revision": "1ade16a5450925b7496e1031938175d1f5d30d31",
 			"branch": "master",
 			"path": "/context"
+		},
+		{
+			"importpath": "golang.org/x/net/http2",
+			"repository": "https://go.googlesource.com/net",
+			"revision": "6acef71eb69611914f7a30939ea9f6e194c78172",
+			"branch": "master",
+			"path": "/http2"
+		},
+		{
+			"importpath": "golang.org/x/net/internal/timeseries",
+			"repository": "https://go.googlesource.com/net",
+			"revision": "6acef71eb69611914f7a30939ea9f6e194c78172",
+			"branch": "master",
+			"path": "/internal/timeseries"
+		},
+		{
+			"importpath": "golang.org/x/net/trace",
+			"repository": "https://go.googlesource.com/net",
+			"revision": "6acef71eb69611914f7a30939ea9f6e194c78172",
+			"branch": "master",
+			"path": "/trace"
+		},
+		{
+			"importpath": "google.golang.org/grpc",
+			"repository": "https://github.com/grpc/grpc-go",
+			"revision": "89f694edb447e224bd0ffff7a03f9161ce486482",
+			"branch": "master"
 		}
 	]
 }

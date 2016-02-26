@@ -8,17 +8,22 @@ import (
 )
 
 func main() {
-	postgresConn := mustEnvString("POSTGRES_CONN")
+	var (
+		postgresConn = mustEnvString("POSTGRES_CONN")
+		listenAddr   = mustEnvString("SPANX_ADDRESS")
+		cert         = mustEnvString("SPANX_CERT")
+		certkey      = mustEnvString("SPANX_CERT_KEY")
+	)
+
 	db, err := store.NewPostgres(postgresConn)
 	if err != nil {
 		log.Fatalf("Error while initializing postgres: ", err)
 	}
 
-	listenAddr := mustEnvString("SPANX_ADDRESS")
-	log.Infof("service spanx starting http listener at %s", listenAddr)
+	log.Infof("service spanx starting grpc listener at %s", listenAddr)
 
 	svc := service.New(db)
-	svc.StartHTTP(listenAddr)
+	log.Fatal(svc.Start(listenAddr, cert, certkey))
 }
 
 func mustEnvString(envVar string) string {
