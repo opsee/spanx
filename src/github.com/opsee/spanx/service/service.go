@@ -7,6 +7,7 @@ import (
 	opsee "github.com/opsee/basic/service"
 	"github.com/opsee/spanx/roler"
 	"github.com/opsee/spanx/store"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	grpcauth "google.golang.org/grpc/credentials"
@@ -47,6 +48,11 @@ func (s *service) Start(listenAddr, cert, certkey string) error {
 }
 
 func (s *service) PutRole(ctx context.Context, req *opsee.PutRoleRequest) (*opsee.PutRoleResponse, error) {
+	log.WithFields(log.Fields{
+		"customer_id": req.User.CustomerId,
+		"endpoint":    "PutRole",
+	}).Info("grpc request")
+
 	creds, err := roler.ResolveCredentials(s.db, req.User.CustomerId, req.Credentials.GetAccessKeyID(), req.Credentials.GetSecretAccessKey())
 	if err != nil {
 		return nil, err
@@ -62,6 +68,11 @@ func (s *service) PutRole(ctx context.Context, req *opsee.PutRoleRequest) (*opse
 }
 
 func (s *service) GetCredentials(ctx context.Context, req *opsee.GetCredentialsRequest) (*opsee.GetCredentialsResponse, error) {
+	log.WithFields(log.Fields{
+		"customer_id": req.User.CustomerId,
+		"endpoint":    "GetCredentials",
+	}).Info("grpc request")
+
 	creds, err := roler.GetCredentials(s.db, req.User.CustomerId)
 	if err != nil {
 		return nil, err
