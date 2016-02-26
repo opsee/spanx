@@ -2,11 +2,8 @@ FROM quay.io/opsee/vinz:latest
 
 ENV POSTGRES_CONN ""
 ENV SPANX_ADDRESS ""
-ENV AWS_ACCESS_KEY_ID ""
-ENV AWS_SECRET_ACCESS_KEY ""
-ENV AWS_DEFAULT_REGION ""
-ENV AWS_INSTANCE_ID ""
-ENV AWS_SESSION_TOKEN ""
+ENV SPANX_CERT="cert.pem"
+ENV SPANX_CERT_KEY="key.pem"
 ENV APPENV ""
 
 RUN apk add --update bash ca-certificates curl
@@ -18,6 +15,8 @@ RUN curl -Lo /opt/bin/ec2-env https://s3-us-west-2.amazonaws.com/opsee-releases/
 COPY run.sh /
 COPY target/linux/amd64/bin/* /
 COPY migrations /migrations
+COPY cert.pem /
+COPY key.pem /
 
 EXPOSE 9095
 CMD ["/spanx"]
