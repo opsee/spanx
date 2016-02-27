@@ -51,6 +51,7 @@ const (
     "autoscaling:DescribeAutoScalingGroups",
     "cloudformation:CreateStack",
     "cloudformation:DeleteStack",
+    "cloudformation:DescribeStacks",
     "cloudformation:DescribeStackResources",
     "cloudformation:ListStackResources",
     "cloudformation:UpdateStack",
