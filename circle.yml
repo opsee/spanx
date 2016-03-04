@@ -8,6 +8,7 @@ dependencies:
   override:
     - docker info
     - docker login -e $DOCKER_EMAIL -u $DOCKER_USERNAME -p $DOCKER_PASSWORD quay.io
+    - sudo pip install --upgrade docker-compose==1.5.2 awscli
     - docker pull sameersbn/postgresql:9.4-3
     - docker run --name postgresql -d -e PSQL_TRUST_LOCALNET=true -e DB_USER=postgres -e DB_PASS= -e DB_NAME=spanx_test sameersbn/postgresql:9.4-3
 test:
@@ -22,3 +23,4 @@ deployment:
     commands:
       - docker tag -f quay.io/opsee/spanx:$CIRCLE_SHA1 quay.io/opsee/spanx:latest
       - docker push quay.io/opsee/spanx:latest
+      - make deploy-role
