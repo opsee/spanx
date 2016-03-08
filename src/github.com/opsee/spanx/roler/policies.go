@@ -99,6 +99,13 @@ const (
         "iam:*"
       ],
       "Resource": "arn:aws:iam::*:role/opsee-role-*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Resource": "arn:aws:s3:::opsee-bastion-cf/*"
     }
   ]
 }`
