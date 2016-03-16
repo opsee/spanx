@@ -47,14 +47,14 @@ const (
     {
       "Effect": "Allow",
       "Action": [
-        "autoscaling:DescribeLoadBalancers",
-        "autoscaling:DescribeAutoScalingGroups",
+        "autoscaling:*",
         "cloudformation:CreateStack",
         "cloudformation:DeleteStack",
         "cloudformation:DescribeStacks",
         "cloudformation:DescribeStackResources",
         "cloudformation:ListStackResources",
         "cloudformation:UpdateStack",
+        "cloudformation:DescribeStackEvents",
         "ec2:CreateTags",
         "ec2:DeleteTags",
         "ec2:AuthorizeSecurityGroupIngress",
@@ -98,7 +98,10 @@ const (
       "Action": [
         "iam:*"
       ],
-      "Resource": "arn:aws:iam::*:role/opsee-role-*"
+      "Resource": [
+        "arn:aws:iam::*:role/opsee-role-*",
+        "arn:aws:iam::*:instance-profile/opsee-stack-*"
+      ]
     },
     {
       "Effect": "Allow",
