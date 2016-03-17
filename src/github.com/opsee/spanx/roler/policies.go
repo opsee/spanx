@@ -50,7 +50,7 @@ const (
         "autoscaling:*",
         "cloudformation:*",
         "ec2:*",
-        "cloudwatch:*"
+        "cloudwatch:*",
         "rds:Describe*",
         "sns:CreateTopic",
         "sns:DeleteTopic",
