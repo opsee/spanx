@@ -63,7 +63,7 @@ const (
         "sqs:ReceiveMessage",
         "sqs:GetQueueAttributes",
         "sqs:SetQueueAttributes",
-        "elasticloadbalancing:DescribeLoadBalancers",
+        "elasticloadbalancing:DescribeLoadBalancers"
       ],
       "Resource": "*"
     },
