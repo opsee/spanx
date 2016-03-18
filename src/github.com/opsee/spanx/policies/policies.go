@@ -1,4 +1,4 @@
-package roler
+package policies
 
 const (
 	UserPolicy = `{
