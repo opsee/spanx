@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/opsee/spanx/roler"
+	"github.com/opsee/spanx/policies"
 )
 
 func main() {
-	fmt.Println(roler.Policy)
+	fmt.Println(policies.Policy)
 }

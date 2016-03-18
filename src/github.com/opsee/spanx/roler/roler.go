@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/cenkalti/backoff"
 	"github.com/opsee/basic/com"
+	"github.com/opsee/spanx/policies"
 	"github.com/opsee/spanx/store"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -26,7 +27,7 @@ var (
 	arnRegexp  = regexp.MustCompile(`^arn:aws:iam::(\d+):(user.+|root)$`)
 
 	AccountNotFound         = errors.New("AWS account for that customer not found.")
-	InsufficientPermissions = fmt.Errorf("IAM role or user provided has insufficient permissions to provision a role. The minimum policy required to launch Opsee is:\n%s", UserPolicy)
+	InsufficientPermissions = fmt.Errorf("IAM role or user provided has insufficient permissions to provision a role. The minimum policy required to launch Opsee is:\n%s", policies.UserPolicy)
 )
 
 func init() {
@@ -136,7 +137,7 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 
 	// time 2 provision a policy / role for us in their aws account
 	_, err = iamClient.CreateRole(&iam.CreateRoleInput{
-		AssumeRolePolicyDocument: aws.String(fmt.Sprintf(AssumeRolePolicy, customerID)),
+		AssumeRolePolicyDocument: aws.String(fmt.Sprintf(policies.AssumeRolePolicy, customerID)),
 		RoleName:                 aws.String(account.RoleName()),
 	})
 
@@ -145,7 +146,7 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 	}
 
 	_, err = iamClient.PutRolePolicy(&iam.PutRolePolicyInput{
-		PolicyDocument: aws.String(Policy),
+		PolicyDocument: aws.String(policies.Policy),
 		PolicyName:     aws.String(account.PolicyName()),
 		RoleName:       aws.String(account.RoleName()),
 	})
