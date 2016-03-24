@@ -1,7 +1,8 @@
-all: fmt build
+APPENV ?= testenv
+PROJECT := spanx
+REV ?= latest
 
-build:
-	gb build
+all: build
 
 clean:
 	rm -fr target bin pkg
@@ -10,22 +11,25 @@ fmt:
 	@gofmt -w ./
 
 deps:
-	./deps.sh
+	docker-compose up -d
+	docker run --link $(PROJECT)_postgres_1:postgres aanand/wait
 
 migrate:
 	migrate -url $(POSTGRES_CONN) -path ./migrations up
 
-docker: fmt
+build: deps $(APPENV)
 	docker run \
-		--link postgresql:postgresql \
+		--link $(PROJECT)_postgres_1:postgres \
 		--env-file ./$(APPENV) \
 		-e "TARGETS=linux/amd64" \
-		-v `pwd`:/build quay.io/opsee/build-go \
-		&& docker build -t quay.io/opsee/spanx .
+		-e PROJECT=github.com/opsee/$(PROJECT) \
+		-v `pwd`:/gopath/src/github.com/opsee/$(PROJECT) \
+		quay.io/opsee/build-go:16
+	docker build -t quay.io/opsee/$(PROJECT):$(REV) .
 
 run: docker
 	docker run \
-		--link postgresql:postgresql \
+		--link $(PROJECT)_postgres_1:postgres \
 		--env-file ./$(APPENV) \
 		-e AWS_DEFAULT_REGION \
 		-e AWS_ACCESS_KEY_ID \
