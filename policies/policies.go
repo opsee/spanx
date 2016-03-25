@@ -49,12 +49,20 @@ const (
       "Action": [
         "autoscaling:DescribeAutoScalingGroups",
         "autoscaling:DescribeAutoScalingInstances",
+        "autoscaling:DescribeScalingActivities",
         "autoscaling:DescribeLaunchConfigurations",
         "autoscaling:DescribeLoadBalancers",
+        "autoscaling:CreateLaunchConfiguration",
+        "autoscaling:DeleteLaunchConfiguration",
+        "autoscaling:CreateAutoScalingGroup",
+        "autoscaling:CreateOrUpdateTags",
+        "autoscaling:DeleteAutoScalingGroup",
+        "autoscaling:UpdateAutoScalingGroup",
         "cloudwatch:DescribeAlarms",
         "cloudwatch:DescribeAlarmsForMetric",
         "cloudwatch:GetMetricStatistics",
         "cloudwatch:ListMetrics",
+        "ec2:AuthorizeSecurityGroupEgress",
         "ec2:AuthorizeSecurityGroupIngress",
         "ec2:CreateSecurityGroup",
         "ec2:CreateTags",
@@ -77,6 +85,7 @@ const (
         "ec2:DescribeVpcAttribute",
         "ec2:DescribeVpcs",
         "ec2:ReportInstanceStatus",
+        "ec2:RevokeSecurityGroupEgress",
         "ec2:RevokeSecurityGroupIngress",
         "ec2:RebootInstances",
         "ec2:RunInstances",
@@ -128,20 +137,7 @@ const (
     {
       "Effect": "Allow",
       "Action": [
-        "autoscaling:CreateAutoScalingGroup",
-        "autoscaling:CreateLaunchConfiguration",
-        "autoscaling:CreateOrUpdateTags",
-        "autoscaling:DeleteAutoScalingGroup",
-        "autoscaling:DeleteLaunchConfiguration",
-        "autoscaling:UpdateAutoScalingGroup"
-      ],
-      "Resource": [
-        "arn:aws:autoscaling:*:*:autoScalingGroup:*:autoScalingGroupName/opsee-stack-*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
+        "cloudformation:ListStackResources",
         "cloudformation:CreateStack",
         "cloudformation:DeleteStack",
         "cloudformation:UpdateStack"
