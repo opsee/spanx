@@ -136,7 +136,7 @@ const (
         "autoscaling:UpdateAutoScalingGroup"
       ],
       "Resource": [
-        "arn:*:autoscaling:*:*:autoScalingGroup:*:autoScalingGroupName/opsee-stack-*"
+        "arn:aws:autoscaling:*:*:autoScalingGroup:*:autoScalingGroupName/opsee-stack-*"
       ]
     },
     {
@@ -147,7 +147,7 @@ const (
         "cloudformation:UpdateStack"
       ],
       "Resource": [
-        "arn:*:cloudformation:*:*:stack/opsee-stack-*"
+        "arn:aws:cloudformation:*:*:stack/opsee-stack-*"
       ]
     },
     {
@@ -165,7 +165,7 @@ const (
     {
       "Effect": "Allow",
       "Action": "iam:PassRole",
-      "Resource": "arn:*:iam::*:role/opsee-role-*"
+      "Resource": "arn:aws:iam::*:role/opsee-role-*"
     },
     {
       "Effect": "Allow",
