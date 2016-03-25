@@ -21,6 +21,9 @@ build: deps $(APPENV)
 	docker run \
 		--link $(PROJECT)_postgres_1:postgres \
 		--env-file ./$(APPENV) \
+		-e AWS_DEFAULT_REGION \
+		-e AWS_ACCESS_KEY_ID \
+		-e AWS_SECRET_ACCESS_KEY \
 		-e "TARGETS=linux/amd64" \
 		-e PROJECT=github.com/opsee/$(PROJECT) \
 		-v `pwd`:/gopath/src/github.com/opsee/$(PROJECT) \

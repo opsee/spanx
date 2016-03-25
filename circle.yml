@@ -18,4 +18,5 @@ deployment:
     owner: opsee
     commands:
       - docker push quay.io/opsee/spanx:$CIRCLE_SHA1
+      - docker tag -f quay.io/opsee/spanx:$CIRCLE_SHA1 quay.io/opsee/spanx:latest
       - make deploy-role
