@@ -147,6 +147,12 @@
 			"revisionTime": "2015-08-27T15:34:15+03:00"
 		},
 		{
+			"checksumSHA1": "5rPfda8jFccr3A6heL+JAmi9K9g=",
+			"path": "github.com/davecgh/go-spew/spew",
+			"revision": "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d",
+			"revisionTime": "2015-11-05T15:09:06-06:00"
+		},
+		{
 			"checksumSHA1": "xwl6RN1KelFEBET0MQ28xyTFqdo=",
 			"path": "github.com/go-ini/ini",
 			"revision": "03e0e7d51a13a91c765d8d0161246bc14a38001a",
@@ -333,10 +339,23 @@
 			"revisionTime": "2016-02-26T14:29:09-08:00"
 		},
 		{
+			"checksumSHA1": "zKKp5SZ3d3ycKe4EKMNT0BqAWBw=",
+			"path": "github.com/pmezard/go-difflib/difflib",
+			"revision": "d8ed2627bdf02c080bf22230dbb337003b7aba2d",
+			"revisionTime": "2015-10-28T10:42:44+01:00"
+		},
+		{
 			"checksumSHA1": "V8karzcTIpqi4yarvOCqXnGWbvo=",
 			"path": "github.com/sirupsen/logrus",
 			"revision": "4b6ea7319e214d98c938f12692336f7ca9348d6b",
 			"revisionTime": "2016-03-17T14:11:10Z"
+		},
+		{
+			"checksumSHA1": "Bn333k9lTndxU3D6n/G5c+GMcYY=",
+			"origin": "github.com/opsee/spanx/vendor/github.com/stretchr/testify/assert",
+			"path": "github.com/stretchr/testify/assert",
+			"revision": "6fe211e493929a8aac0469b93f28b1d0688a9a3a",
+			"revisionTime": "2016-03-05T16:54:46Z"
 		},
 		{
 			"checksumSHA1": "vE43s37+4CJ2CDU6TlOUOYE0K9c=",
