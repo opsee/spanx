@@ -108,7 +108,7 @@ const (
         "rds:DescribeDBInstances",
         "rds:DescribeDBLogFiles",
         "rds:DescribeDBSecurityGroups",
-        "rds:DescribeDBSubnetGroups",		
+        "rds:DescribeDBSubnetGroups",
         "sns:CreateTopic",
         "sns:DeleteTopic",
         "sns:Subscribe",
@@ -117,48 +117,55 @@ const (
         "sqs:CreateQueue",
         "sqs:DeleteQueue",
         "sqs:DeleteMessage",
+        "sqs:ListQueues",
         "sqs:ReceiveMessage",
+        "sqs:SendMessage",
         "sqs:GetQueueAttributes",
         "sqs:SetQueueAttributes"
       ],
       "Resource": "*"
     },
     {
-	    "Effect": "Allow",
+      "Effect": "Allow",
       "Action": [
-    		"autoscaling:CreateAutoScalingGroup",
-    		"autoscaling:CreateLaunchConfiguration",
-    		"autoscaling:CreateOrUpdateTags",
-    		"autoscaling:DeleteAutoScalingGroup",
-    		"autoscaling:DeleteLaunchConfiguration",
-    		"autoscaling:UpdateAutoScalingGroup"
+        "autoscaling:CreateAutoScalingGroup",
+        "autoscaling:CreateLaunchConfiguration",
+        "autoscaling:CreateOrUpdateTags",
+        "autoscaling:DeleteAutoScalingGroup",
+        "autoscaling:DeleteLaunchConfiguration",
+        "autoscaling:UpdateAutoScalingGroup"
       ],
       "Resource": [
-    		"arn:*:autoscaling:*:*:autoScalingGroup:*:autoScalingGroupName/opsee-stack-*"
+        "arn:*:autoscaling:*:*:autoScalingGroup:*:autoScalingGroupName/opsee-stack-*"
       ]
     },
     {
-	    "Effect": "Allow",
+      "Effect": "Allow",
       "Action": [
-    		"cloudformation:CreateStack",
-    		"cloudformation:DeleteStack",
-    		"cloudformation:UpdateStack"
+        "cloudformation:CreateStack",
+        "cloudformation:DeleteStack",
+        "cloudformation:UpdateStack"
       ],
       "Resource": [
-    		"arn:*:cloudformation:*:*:stack/opsee-stack-*"
+        "arn:*:cloudformation:*:*:stack/opsee-stack-*"
       ]
     },
     {
-	    "Effect": "Allow",
+      "Effect": "Allow",
       "Action": [
-    		"iam:AddRoleToInstanceProfile",
-    		"iam:CreateInstanceProfile",
-    		"iam:DeleteInstanceProfile",
-    		"iam:RemoveRoleFromInstanceProfile"
+        "iam:AddRoleToInstanceProfile",
+        "iam:CreateInstanceProfile",
+        "iam:DeleteInstanceProfile",
+        "iam:RemoveRoleFromInstanceProfile"
       ],
       "Resource": [
-    		"arn:aws:iam::*:instance-profile/opsee-stack-*"
+        "arn:aws:iam::*:instance-profile/opsee-stack-*"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:*:iam::*:role/opsee-role-*"
     },
     {
       "Effect": "Allow",
@@ -168,5 +175,6 @@ const (
       "Resource": "arn:aws:s3:::opsee-bastion-cf/*"
     }
   ]
-}`
+}
+`
 )
