@@ -68,35 +68,8 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 		account *com.Account
 		creds   credentials.Value
 		err     error
-		logger  = log.WithFields(log.Fields{"customer-id": customerID})
+		logger  = log.WithFields(log.Fields{"customer_id": customerID})
 	)
-
-	account, err = db.GetAccount(&store.GetAccountRequest{CustomerID: customerID, Active: true})
-	if err != nil {
-		return creds, err
-	}
-
-	if account != nil {
-		// test if the stored account access is still valid,
-		// if so, just return those creds. if not, recover
-		// from the error by attempting to provision another role
-		creds, err = getAccountCredentials(db, account)
-
-		if err != nil {
-			logger.WithError(err).Error("attempt to access stored account role failed, going to provision another")
-
-			// yeah, so just delete this sucker and we'll put a new one
-			err = deleteAccountCredentials(db, account)
-			if err != nil {
-				return creds, err
-			}
-
-			// nil out our value here
-			creds = credentials.Value{}
-		} else {
-			return creds, nil
-		}
-	}
 
 	// grab the account id and persist it in an account object
 	iamClient := iam.New(session.New(&aws.Config{
@@ -116,12 +89,31 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 
 	arn := aws.StringValue(user.User.Arn)
 	if arn == "" {
-		return creds, fmt.Errorf("No user found when fetching the current user from provided credentials")
+		err = fmt.Errorf("No user found when fetching the current user from provided credentials")
+		logger.WithError(err).Error("error fetching user ARN")
+		return creds, err
 	}
 
 	accountID, err := parseARNAccount(arn)
 	if err != nil {
+		logger.WithError(err).Error("error parsing user ARN")
 		return creds, err
+	}
+
+	// find out if we already have an account saved
+	account, err = db.GetAccount(&store.GetAccountRequest{CustomerID: customerID, Active: true})
+	if err != nil {
+		logger.WithError(err).Error("error reading account from db")
+		return creds, err
+	}
+
+	if account != nil && account.ID != accountID {
+		// yeah, so just delete this sucker and we'll put a new one
+		deleteAccountCredentials(db, account)
+		if err != nil {
+			logger.WithError(err).Error("error deleting account from db")
+			return creds, err
+		}
 	}
 
 	account = &com.Account{
@@ -132,6 +124,7 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 
 	err = db.PutAccount(account)
 	if err != nil {
+		logger.WithError(err).Error("error saving account in db")
 		return creds, err
 	}
 
@@ -142,6 +135,7 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 	})
 
 	if err = handleAWSError("CreateRole", err); err != nil {
+		logger.WithError(err).Error("error creating role")
 		return creds, err
 	}
 
@@ -152,6 +146,7 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 	})
 
 	if err = handleAWSError("PutRolePolicy", err); err != nil {
+		logger.WithError(err).Error("error putting role policy")
 		return creds, err
 	}
 
@@ -162,6 +157,7 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 func GetCredentials(db store.Store, customerID string) (credentials.Value, error) {
 	account, err := db.GetAccount(&store.GetAccountRequest{CustomerID: customerID, Active: true})
 	if err != nil {
+		log.WithFields(log.Fields{"customer_id": customerID}).WithError(err).Error("error getting account from db")
 		return credentials.Value{}, err
 	}
 
@@ -171,6 +167,7 @@ func GetCredentials(db store.Store, customerID string) (credentials.Value, error
 func DeleteCredentials(db store.Store, customerID string) error {
 	account, err := db.GetAccount(&store.GetAccountRequest{CustomerID: customerID, Active: true})
 	if err != nil {
+		log.WithFields(log.Fields{"customer_id": customerID}).WithError(err).Error("error getting account from db")
 		return err
 	}
 
@@ -224,7 +221,7 @@ func (s *systemClock) Now() time.Time {
 
 func handleAWSError(meth string, err error) error {
 	if awsErr, ok := err.(awserr.Error); ok {
-		log.WithError(err).Error("IAM error")
+		log.WithError(err).Errorf("IAM error - %s", meth)
 
 		switch awsErr.Code() {
 		case "AccessDenied":
