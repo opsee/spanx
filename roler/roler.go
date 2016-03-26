@@ -87,6 +87,12 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 		return creds, handleAWSError("GetUser", err)
 	}
 
+	if user.User == nil {
+		err = fmt.Errorf("No user returned from aws sdk, this shouldn't happen")
+		logger.WithError(err).Error("error fetching user")
+		return creds, err
+	}
+	
 	arn := aws.StringValue(user.User.Arn)
 	if arn == "" {
 		err = fmt.Errorf("No user found when fetching the current user from provided credentials")
@@ -100,32 +106,31 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 		return creds, err
 	}
 
-	// find out if we already have an account saved
-	account, err = db.GetAccount(&store.GetAccountRequest{CustomerID: customerID, Active: true})
-	if err != nil {
-		logger.WithError(err).Error("error reading account from db")
-		return creds, err
-	}
-
-	if account != nil && account.ID != accountID {
-		// yeah, so just delete this sucker and we'll put a new one
-		deleteAccountCredentials(db, account)
-		if err != nil {
-			logger.WithError(err).Error("error deleting account from db")
-			return creds, err
-		}
-	}
-
 	account = &com.Account{
 		ID:         accountID,
 		CustomerID: customerID,
 		Active:     true,
 	}
 
-	err = db.PutAccount(account)
+	// find out if we already have an account saved
+	oldAccount, err := db.GetAccount(&store.GetAccountRequest{CustomerID: customerID, Active: true})
 	if err != nil {
-		logger.WithError(err).Error("error saving account in db")
+		logger.WithError(err).Error("error reading account from db")
 		return creds, err
+	}
+
+	if oldAccount != nil && oldAccount.ID != accountID {
+		err := db.UpdateAccount(oldAccount, account)
+		if err != nil {
+			logger.WithError(err).Error("error updating account in db")
+			return creds, err
+		}
+	} else {
+		err = db.PutAccount(account)
+		if err != nil {
+			logger.WithError(err).Error("error saving account in db")
+			return creds, err
+		}
 	}
 
 	// time 2 provision a policy / role for us in their aws account
@@ -171,10 +176,6 @@ func DeleteCredentials(db store.Store, customerID string) error {
 		return err
 	}
 
-	return deleteAccountCredentials(db, account)
-}
-
-func deleteAccountCredentials(db store.Store, account *com.Account) error {
 	return db.DeleteAccount(account)
 }
 
