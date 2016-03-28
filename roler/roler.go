@@ -92,7 +92,7 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 		logger.WithError(err).Error("error fetching user")
 		return creds, err
 	}
-	
+
 	arn := aws.StringValue(user.User.Arn)
 	if arn == "" {
 		err = fmt.Errorf("No user found when fetching the current user from provided credentials")
@@ -112,25 +112,10 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 		Active:     true,
 	}
 
-	// find out if we already have an account saved
-	oldAccount, err := db.GetAccount(&store.GetAccountRequest{CustomerID: customerID, Active: true})
+	err = resolveAccount(db, account)
 	if err != nil {
-		logger.WithError(err).Error("error reading account from db")
+		logger.WithError(err).Error("error resolving account")
 		return creds, err
-	}
-
-	if oldAccount != nil && oldAccount.ID != accountID {
-		err := db.UpdateAccount(oldAccount, account)
-		if err != nil {
-			logger.WithError(err).Error("error updating account in db")
-			return creds, err
-		}
-	} else {
-		err = db.PutAccount(account)
-		if err != nil {
-			logger.WithError(err).Error("error saving account in db")
-			return creds, err
-		}
 	}
 
 	// time 2 provision a policy / role for us in their aws account
@@ -177,6 +162,26 @@ func DeleteCredentials(db store.Store, customerID string) error {
 	}
 
 	return db.DeleteAccount(account)
+}
+
+func resolveAccount(db store.Store, account *com.Account) error {
+	// find out if we already have an account saved
+	oldAccount, err := db.GetAccount(&store.GetAccountRequest{CustomerID: account.CustomerID, Active: true})
+	if err != nil {
+		return err
+	}
+
+	// no previous account, just make a new one
+	if oldAccount == nil {
+		return db.UpdateAccount(oldAccount, account)
+	}
+
+	// a previous account, but not the same
+	if oldAccount.ID != account.ID {
+		return db.PutAccount(account)
+	}
+
+	return nil
 }
 
 func getAccountCredentials(db store.Store, account *com.Account) (credentials.Value, error) {
