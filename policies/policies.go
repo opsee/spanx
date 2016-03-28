@@ -179,7 +179,7 @@ const (
       "Action": [
         "cloudformation:DescribeStacks",
         "cloudformation:DescribeStackEvents",
-         "cloudformation:DescribeStackResource",
+        "cloudformation:DescribeStackResource",
         "cloudformation:DescribeStackResources",
         "cloudformation:ListStackResources",
         "cloudformation:CreateStack",
@@ -191,9 +191,8 @@ const (
       ]
     },
     
-    // Allow the Opsee IAM role (opsee-role-CUSTOMER_ID) to add and remove itself to the EC2 instance profile created while launching
-    // our cloudformation stack. The Opsee cloudformation stack grants CAPABILITY_IAM to the EC2 instance in order to add
-    // this role.
+    // The following permissions allow Opsee to associate instances in its CloudFormation stack with the role
+    // created during onboarding (opsee-role-CUSTOMER_ID). This requires CAPABILITY_IAM when launching the CloudFormation stack.
     {
       "Effect": "Allow",
       "Action": [
