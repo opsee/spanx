@@ -47,4 +47,7 @@ deploy-role:
 		aws s3 cp --source-region us-east-1 --content-disposition inline --content-type application/json --region $$region --acl public-read s3://opsee-bastion-cf-us-east-1/beta/opsee-role.json s3://opsee-bastion-cf-$$region/beta/ ; \
 	done
 
+test-deploy-role:
+	docker run -it quay.io/opsee/spanx /roler | aws s3 cp --content-disposition inline --content-type text/plain --region us-east-1 --acl public-read - s3://opsee-bastion-cf-us-east-1/beta-test/opsee-role.json
+
 .PHONY: docker run migrate clean all

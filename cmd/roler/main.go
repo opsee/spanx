@@ -6,5 +6,5 @@ import (
 )
 
 func main() {
-	fmt.Println(policies.Policy)
+	fmt.Println(policies.GetPolicyWithComments())
 }

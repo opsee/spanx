@@ -1,19 +1,27 @@
 package policies
 
+import (
+	"regexp"
+)
+
+var (
+	commentRegexp = regexp.MustCompile(`//.*`)
+)
+
 const (
 	UserPolicy = `{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "iam:CreateRole",
-                "iam:GetUser",
-                "iam:PutRolePolicy"
-            ],
-            "Resource": "*"
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:GetUser",
+        "iam:PutRolePolicy"
+      ],
+      "Resource": "*"
+    }
+  ]
 }`
 
 	AssumeRolePolicy = `{
@@ -41,9 +49,11 @@ const (
   ]
 }
 `
-	Policy = `{
+	policy = `{
   "Version": "2012-10-17",
   "Statement": [
+
+    // Permissions required for normal Opsee bastion operation.
     {
       "Effect": "Allow",
       "Action": [
@@ -162,6 +172,8 @@ const (
       ],
       "Resource": "*"
     },
+    
+    // Permissions required to launch the Opsee cloudformation stack.
     {
       "Effect": "Allow",
       "Action": [
@@ -178,6 +190,10 @@ const (
         "arn:aws:cloudformation:*:*:stack/opsee-stack-*"
       ]
     },
+    
+    // Allow the Opsee IAM role (opsee-role-CUSTOMER_ID) to add and remove itself to the EC2 instance profile created while launching
+    // our cloudformation stack. The Opsee cloudformation stack grants CAPABILITY_IAM to the EC2 instance in order to add
+    // this role.
     {
       "Effect": "Allow",
       "Action": [
@@ -190,11 +206,17 @@ const (
         "arn:aws:iam::*:instance-profile/opsee-stack-*"
       ]
     },
+
+    // The PassRole action ensures that our role (opsee-role-CUSTOMER_ID) cannot 
+    // add a permission to another resource that it does not currently have. You can learn more on the AWS Blog:
+    // https://blogs.aws.amazon.com/security/post/Tx3M0IFB5XBOCQX/Granting-Permission-to-Launch-EC2-Instances-with-IAM-Roles-PassRole-Permission
     {
       "Effect": "Allow",
       "Action": "iam:PassRole",
       "Resource": "arn:aws:iam::*:role/opsee-role-*"
     },
+
+    // Allow read access to the Opsee S3 bucket for configuration and cloudformation templates.
     {
       "Effect": "Allow",
       "Action": [
@@ -206,3 +228,11 @@ const (
 }
 `
 )
+
+func GetPolicy() string {
+	return commentRegexp.ReplaceAllLiteralString(policy, "")
+}
+
+func GetPolicyWithComments() string {
+	return policy
+}
