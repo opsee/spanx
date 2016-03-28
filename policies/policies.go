@@ -166,6 +166,8 @@ const (
       "Effect": "Allow",
       "Action": [
         "cloudformation:DescribeStacks",
+        "cloudformation:DescribeStackEvents",
+         "cloudformation:DescribeStackResource",
         "cloudformation:DescribeStackResources",
         "cloudformation:ListStackResources",
         "cloudformation:CreateStack",
