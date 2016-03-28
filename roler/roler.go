@@ -173,12 +173,12 @@ func resolveAccount(db store.Store, account *com.Account) error {
 
 	// no previous account, just make a new one
 	if oldAccount == nil {
-		return db.UpdateAccount(oldAccount, account)
+		return db.PutAccount(account)
 	}
 
 	// a previous account, but not the same
 	if oldAccount.ID != account.ID {
-		return db.PutAccount(account)
+		return db.UpdateAccount(oldAccount, account)
 	}
 
 	return nil
