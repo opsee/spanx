@@ -33,7 +33,7 @@ func SimulateOnResources(actions, resources []string) ([]*SimulateResponse, erro
 
 	resp, err := client.SimulateCustomPolicy(&iam.SimulateCustomPolicyInput{
 		PolicyInputList: []*string{
-			aws.String(Policy),
+			aws.String(GetPolicy()),
 		},
 		ResourceArns: resourceList,
 		ActionNames:  actionList,

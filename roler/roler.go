@@ -130,7 +130,7 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 	}
 
 	_, err = iamClient.PutRolePolicy(&iam.PutRolePolicyInput{
-		PolicyDocument: aws.String(policies.Policy),
+		PolicyDocument: aws.String(policies.GetPolicy()),
 		PolicyName:     aws.String(account.PolicyName()),
 		RoleName:       aws.String(account.RoleName()),
 	})
