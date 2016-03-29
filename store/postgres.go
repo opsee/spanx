@@ -36,11 +36,13 @@ func (pg *Postgres) UpdateAccount(oldAccount *com.Account, account *com.Account)
 
 	err = pg.deleteAccount(tx, oldAccount)
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
 
 	err = pg.putAccount(tx, account)
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
 
