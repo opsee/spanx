@@ -15,11 +15,13 @@ import (
 )
 
 var (
-	errUnauthorized     = errors.New("unauthorized.")
-	errMissingAccessKey = errors.New("missing AccessKeyID.")
-	errMissingSecretKey = errors.New("missing SecretAccessKey.")
-	errMissingRegion    = errors.New("missing region.")
-	errUnknown          = errors.New("unknown error.")
+	errUnauthorized       = errors.New("unauthorized.")
+	errMissingAccessKey   = errors.New("missing AccessKeyID.")
+	errMissingSecretKey   = errors.New("missing SecretAccessKey.")
+	errMissingRegion      = errors.New("missing region.")
+	errUnknown            = errors.New("unknown error.")
+	errSavingRole         = errors.New("Error saving the Opsee role in your AWS account, please check that you have the necessary permissions.")
+	errGettingCredentials = errors.New("Error fetching credentials from AWS STS.")
 )
 
 type service struct {
@@ -55,7 +57,7 @@ func (s *service) PutRole(ctx context.Context, req *opsee.PutRoleRequest) (*opse
 
 	creds, err := roler.ResolveCredentials(s.db, req.User.CustomerId, req.Credentials.GetAccessKeyID(), req.Credentials.GetSecretAccessKey())
 	if err != nil {
-		return nil, err
+		return nil, errSavingRole
 	}
 
 	return &opsee.PutRoleResponse{
@@ -75,7 +77,7 @@ func (s *service) GetCredentials(ctx context.Context, req *opsee.GetCredentialsR
 
 	creds, err := roler.GetCredentials(s.db, req.User.CustomerId)
 	if err != nil {
-		return nil, err
+		return nil, errGettingCredentials
 	}
 
 	return &opsee.GetCredentialsResponse{
