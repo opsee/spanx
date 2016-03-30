@@ -194,7 +194,7 @@ func getAccountCredentials(db store.Store, account *com.Account) (credentials.Va
 		backoff.Retry(func() error {
 			creds, err = stscreds.NewCredentials(awsSession, account.RoleARN(), func(arp *stscreds.AssumeRoleProvider) {
 				arp.ExternalID = aws.String(account.CustomerID)
-				arp.Duration = 30 * time.Minute
+				arp.Duration = 60 * time.Minute
 			}).Get()
 
 			if err != nil {
