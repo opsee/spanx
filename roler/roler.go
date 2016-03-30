@@ -213,6 +213,10 @@ func getAccountCredentials(db store.Store, account *com.Account) (credentials.Va
 			Clock:               &systemClock{},
 		})
 
+		if err != nil {
+			log.WithFields(log.Fields{"customer_id": account.CustomerID}).WithError(err).Error("error fetching credentials from AWS")
+		}
+
 		return creds, err
 	} else {
 		return creds, AccountNotFound
