@@ -172,6 +172,7 @@ const RoleTemplate = `{
     "OpseeNotification": {
       "Type": "Custom::OpseeNotificationResource",
       "Version": "1.0",
+      "DependsOn": "OpseeRole",
       "Properties": {
         "ServiceToken": { "Fn::FindInMap": ["ServiceTokenMap", { "Ref": "AWS::Region" }, "ServiceToken"] },
         "RoleExternalID": "{{ .User.ExternalID }}",

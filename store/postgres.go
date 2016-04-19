@@ -53,6 +53,25 @@ func (pg *Postgres) DeleteAccount(account *com.Account) error {
 	return pg.deleteAccount(pg.db, account)
 }
 
+func (pg *Postgres) GetAccountByExternalID(externalID string) (*com.Account, error) {
+	account := &com.Account{}
+	err := pg.db.Get(
+		account,
+		"select * from accounts where external_id = $1 limit 1",
+		externalID,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return account, nil
+}
+
 func (pg *Postgres) GetAccount(request *GetAccountRequest) (*com.Account, error) {
 	account := &com.Account{}
 	err := pg.db.Get(
@@ -96,6 +115,73 @@ func (pg *Postgres) deleteAccount(x sqlx.Ext, account *com.Account) error {
 		x,
 		`delete from accounts where id = :id and customer_id = :customer_id`,
 		account,
+	)
+	return err
+}
+
+func (pg *Postgres) GetStack(customerID, externalID string) (*Stack, error) {
+	stack := &Stack{}
+	err := pg.db.Get(
+		stack,
+		"select * from stacks where external_id = $1 and customer_id = $2 limit 1",
+		externalID,
+		customerID,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return stack, nil
+}
+
+func (pg *Postgres) PutStack(stack *Stack) error {
+	return pg.putStack(pg.db, stack)
+}
+
+func (pg *Postgres) UpdateStack(oldStack *Stack, stack *Stack) error {
+	tx, err := pg.db.Beginx()
+	if err != nil {
+		return err
+	}
+
+	err = pg.deleteStack(tx, oldStack)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = pg.putStack(tx, stack)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (pg *Postgres) DeleteStack(stack *Stack) error {
+	return pg.deleteStack(pg.db, stack)
+}
+
+func (pg *Postgres) putStack(x sqlx.Ext, stack *Stack) error {
+	_, err := sqlx.NamedExec(
+		x,
+		`insert into stacks (external_id, customer_id, stack_id, stack_name, active) values (:external_id, :customer_id, :stack_id, :stack_name, :active)`,
+		stack,
+	)
+	return err
+}
+
+func (pg *Postgres) deleteStack(x sqlx.Ext, stack *Stack) error {
+	_, err := sqlx.NamedExec(
+		x,
+		`delete from stacks where external_id = :external_id and customer_id = :customer_id`,
+		stack,
 	)
 	return err
 }
