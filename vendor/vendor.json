@@ -275,50 +275,55 @@
 		{
 			"checksumSHA1": "1altANdLy8yIa6IP4WzwbmcYBB4=",
 			"path": "github.com/opsee/basic/com",
-			"revision": "bda735ff1865283d36f0b312dc2f9446fccdbf63",
-			"revisionTime": "2016-03-11T11:53:36-08:00"
+			"revision": "c7d9e1191b4ae6b9f526fae214a3fc13fc6fa7ae",
+			"revisionTime": "2016-04-19T16:54:50-07:00"
 		},
 		{
 			"checksumSHA1": "XHb3aTqGcQFUr2hqXw1YS6fVWBU=",
 			"path": "github.com/opsee/basic/schema",
-			"revision": "bda735ff1865283d36f0b312dc2f9446fccdbf63",
-			"revisionTime": "2016-03-11T11:53:36-08:00"
+			"revision": "c7d9e1191b4ae6b9f526fae214a3fc13fc6fa7ae",
+			"revisionTime": "2016-04-19T16:54:50-07:00"
 		},
 		{
 			"checksumSHA1": "55hl4D/WVwNU+2yWBH7NjULTE4M=",
 			"path": "github.com/opsee/basic/schema/aws/autoscaling",
-			"revision": "bda735ff1865283d36f0b312dc2f9446fccdbf63",
-			"revisionTime": "2016-03-11T11:53:36-08:00"
+			"revision": "c7d9e1191b4ae6b9f526fae214a3fc13fc6fa7ae",
+			"revisionTime": "2016-04-19T16:54:50-07:00"
+		},
+		{
+			"path": "github.com/opsee/basic/schema/aws/cloudwatch",
+			"revision": "c7d9e1191b4ae6b9f526fae214a3fc13fc6fa7ae",
+			"revisionTime": "2016-04-19T16:54:50-07:00"
 		},
 		{
 			"checksumSHA1": "To75u7qklWRF6uKvN3/Jg7ta3TU=",
 			"path": "github.com/opsee/basic/schema/aws/credentials",
-			"revision": "bda735ff1865283d36f0b312dc2f9446fccdbf63",
-			"revisionTime": "2016-03-11T11:53:36-08:00"
+			"revision": "c7d9e1191b4ae6b9f526fae214a3fc13fc6fa7ae",
+			"revisionTime": "2016-04-19T16:54:50-07:00"
 		},
 		{
 			"checksumSHA1": "nem6ny56skZPSnkWFn4SaoX7OBk=",
 			"path": "github.com/opsee/basic/schema/aws/ec2",
-			"revision": "bda735ff1865283d36f0b312dc2f9446fccdbf63",
-			"revisionTime": "2016-03-11T11:53:36-08:00"
+			"revision": "c7d9e1191b4ae6b9f526fae214a3fc13fc6fa7ae",
+			"revisionTime": "2016-04-19T16:54:50-07:00"
 		},
 		{
 			"checksumSHA1": "1+iNAblYYKAjnsLM092USuSxJSM=",
 			"path": "github.com/opsee/basic/schema/aws/elb",
-			"revision": "bda735ff1865283d36f0b312dc2f9446fccdbf63",
-			"revisionTime": "2016-03-11T11:53:36-08:00"
+			"revision": "c7d9e1191b4ae6b9f526fae214a3fc13fc6fa7ae",
+			"revisionTime": "2016-04-19T16:54:50-07:00"
 		},
 		{
 			"checksumSHA1": "/wBwr2Vm0ZXLyMZfSaLcAG8HQYw=",
 			"path": "github.com/opsee/basic/schema/aws/rds",
-			"revision": "bda735ff1865283d36f0b312dc2f9446fccdbf63",
-			"revisionTime": "2016-03-11T11:53:36-08:00"
+			"revision": "c7d9e1191b4ae6b9f526fae214a3fc13fc6fa7ae",
+			"revisionTime": "2016-04-19T16:54:50-07:00"
 		},
 		{
 			"checksumSHA1": "QEmBAkcsURR2UHRMwp2A//djp3c=",
 			"path": "github.com/opsee/basic/service",
-			"revision": "bda735ff1865283d36f0b312dc2f9446fccdbf63",
-			"revisionTime": "2016-03-11T11:53:36-08:00"
+			"revision": "c7d9e1191b4ae6b9f526fae214a3fc13fc6fa7ae",
+			"revisionTime": "2016-04-19T16:54:50-07:00"
 		},
 		{
 			"checksumSHA1": "NGwjroMEC6PlYnxhLWtnQ1LxUpE=",
