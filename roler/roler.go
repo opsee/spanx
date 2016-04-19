@@ -144,6 +144,25 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 	return getAccountCredentials(db, account)
 }
 
+func AddExternalId(db store.Store, customerID string, externalID string) (*com.Account, error) {
+	account, err := db.GetAccount(&store.GetAccountRequest{CustomerID: customerID, Active: true})
+	if err != nil {
+		log.WithFields(log.Fields{"customer_id": customerID}).WithError(err).Error("error getting account from db")
+		return nil, err
+	}
+
+	account.ExternalID = externalID
+
+	err = store.UpdateAccount(account, account)
+	if err != nil {
+		log.WithFields(log.Fields{"customer_id": customerID}).WithError(err).Error("error getting account from db")
+		return nil, err
+	}
+
+	return account, nil
+
+}
+
 func GetCredentials(db store.Store, customerID string) (credentials.Value, error) {
 	account, err := db.GetAccount(&store.GetAccountRequest{CustomerID: customerID, Active: true})
 	if err != nil {
