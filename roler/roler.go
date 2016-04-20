@@ -1,8 +1,17 @@
 package roler
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"net/url"
+	"os"
+	"path"
+	"regexp"
+	"strconv"
+	"text/template"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -11,19 +20,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/cenkalti/backoff"
 	"github.com/opsee/basic/com"
 	"github.com/opsee/spanx/policies"
 	"github.com/opsee/spanx/store"
 	log "github.com/sirupsen/logrus"
-	"os"
-	"regexp"
-	"strconv"
-	"time"
+)
+
+const (
+	cfnBucketName = "opsee-bastion-cf"
 )
 
 var (
 	awsSession *session.Session
+	s3Client   s3iface.S3API
 	arnRegexp  = regexp.MustCompile(`^arn:aws:iam::(\d+):(user.+|root)$`)
 
 	AccountNotFound         = errors.New("AWS account for that customer not found.")
@@ -36,6 +48,8 @@ func init() {
 		region  string
 		creds   *credentials.Credentials
 	)
+
+	s3Client = s3.New(session.New())
 
 	ec2meta = ec2metadata.New(session.New())
 	if ec2meta.Available() {
@@ -61,6 +75,101 @@ func init() {
 		MaxRetries:  aws.Int(11),
 		Region:      aws.String(region),
 	})
+}
+
+func getS3Object(customerID, externalID string) string {
+	return fmt.Sprintf("roles/%s/%s.cloudformation.json", customerID, externalID)
+}
+
+// https://s3-us-west-2.amazonaws.com/yeobot/cf/8fb74362-983f-487b-98e5-f1f0c044cd45/34a39e06-31b9-4dfc-82ff-9629864910bb.cloudformation.json
+func getS3URL(region, customerID, externalID string) (*url.URL, error) {
+	var endpoint string
+	if region == "us-east-1" {
+		endpoint = "s3.amazonaws.com"
+	} else {
+		endpoint = fmt.Sprintf("s3-%s.amazonaw.com", region)
+	}
+
+	u, err := url.Parse(fmt.Sprintf("https://%s", endpoint))
+	if err != nil {
+		return nil, err
+	}
+
+	u.Path = path.Join(u.Path, cfnBucketName, getS3Object(customerID, externalID))
+
+	return u, nil
+}
+
+func getLaunchURL(region, stackName, s3URL string) string {
+	return fmt.Sprintf(
+		"https://console.aws.amazon.com/cloudformation/home?region=%s#/stacks/new?stackName=%s&templateURL=%s",
+		region,
+		stackName,
+		s3URL)
+}
+
+// geneate RoleTemplate in template.go
+// go:generate go run generate.go
+func GetStackURL(db store.Store, customerID, region string) (string, error) {
+	var (
+		account *com.Account
+		err     error
+		logger  = log.WithFields(log.Fields{"customer_id": customerID})
+	)
+
+	account, err = db.GetAccount(&store.GetAccountRequest{customerID, true})
+	if err != nil {
+		return "", err
+	}
+
+	if account == nil {
+		err = db.PutAccount(&com.Account{
+			CustomerID: customerID,
+			Active:     false,
+		})
+		if err != nil {
+			return "", err
+		}
+
+		// Just let Postgres generate ExternalID for us.
+		account, err = db.GetAccount(&store.GetAccountRequest{customerID, false})
+		if err != nil {
+			return "", err
+		}
+	}
+
+	tmpl := template.Must(template.New("role").Parse(RoleTemplate))
+	if err != nil {
+		return "", err
+	}
+
+	var out bytes.Buffer
+	err = tmpl.Execute(&out, struct {
+		ExternalID string
+	}{account.ExternalID})
+	if err != nil {
+		return "", err
+	}
+
+	_, err = s3Client.PutObject(&s3.PutObjectInput{
+		Bucket:       aws.String(cfnBucketName),
+		ContentType:  aws.String("application/json"),
+		Body:         bytes.NewReader(out.Bytes()),
+		ACL:          aws.String(s3.ObjectCannedACLAuthenticatedRead),
+		StorageClass: aws.String(s3.StorageClassReducedRedundancy),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	s3URL, err := getS3URL(region, account.CustomerID, account.ExternalID)
+	if err != nil {
+		return "", err
+	}
+
+	logger.Infof("Uploaded role template to S3: %s", s3URL.String())
+
+	return getLaunchURL(region, fmt.Sprintf("opsee-role-%s", customerID), s3URL.String()), nil
 }
 
 func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string) (credentials.Value, error) {
