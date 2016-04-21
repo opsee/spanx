@@ -8,7 +8,10 @@ create table role_stacks (
   customer_id UUID not null,
   stack_id character varying not null default '',
   stack_name character varying not null default '',
+  active boolean default true not null,
   created_at timestamp with time zone DEFAULT now() NOT NULL,
   updated_at timestamp with time zone DEFAULT now() NOT NULL,
   primary key (customer_id, external_id)
 );
+
+create index external_id_idx on accounts (external_id);

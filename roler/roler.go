@@ -253,6 +253,25 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 	return getAccountCredentials(db, account)
 }
 
+func AddExternalId(db store.Store, customerID string, externalID string) (*com.Account, error) {
+	account, err := db.GetAccount(&store.GetAccountRequest{CustomerID: customerID, Active: true})
+	if err != nil {
+		log.WithFields(log.Fields{"customer_id": customerID}).WithError(err).Error("error getting account from db")
+		return nil, err
+	}
+
+	newAccount := *account
+	newAccount.ExternalID = externalID
+
+	err = db.UpdateAccount(account, &newAccount)
+	if err != nil {
+		log.WithFields(log.Fields{"customer_id": customerID}).WithError(err).Error("error getting account from db")
+		return nil, err
+	}
+
+	return account, nil
+}
+
 func GetCredentials(db store.Store, customerID string) (credentials.Value, error) {
 	account, err := db.GetAccount(&store.GetAccountRequest{CustomerID: customerID, Active: true})
 	if err != nil {
@@ -301,16 +320,21 @@ func getAccountCredentials(db store.Store, account *com.Account) (credentials.Va
 
 	if account != nil {
 		backoff.Retry(func() error {
-			var arn string
+			var (
+				arn        string
+				externalID string
+			)
 
 			if account.RoleARN != "" {
 				arn = account.RoleARN
+				externalID = account.ExternalID
 			} else {
 				arn = account.ComputedRoleARN()
+				externalID = account.CustomerID
 			}
 
 			creds, err = stscreds.NewCredentials(awsSession, arn, func(arp *stscreds.AssumeRoleProvider) {
-				arp.ExternalID = aws.String(account.CustomerID)
+				arp.ExternalID = aws.String(externalID)
 				arp.Duration = 60 * time.Minute
 			}).Get()
 

@@ -1,8 +1,13 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
+	"net"
+
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/opsee/basic/schema/aws/credentials"
 	opsee "github.com/opsee/basic/service"
 	"github.com/opsee/spanx/roler"
@@ -11,7 +16,6 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	grpcauth "google.golang.org/grpc/credentials"
-	"net"
 )
 
 var (
@@ -46,7 +50,37 @@ func (s *service) Start(listenAddr, cert, certkey string) error {
 		return err
 	}
 
+	s.startSQSListener()
 	return server.Serve(lis)
+}
+
+/*
+{
+  "Type" : "Notification",
+  "MessageId" : "4d12cf8d-821d-5b95-8452-801d2f79ab47",
+  "TopicArn" : "arn:aws:sns:us-west-2:933693344490:opsee-cfn-callback",
+  "Subject" : "AWS CloudFormation custom resource request",
+  "Message" : "{\"RequestType\":\"Create\",\"ServiceToken\":\"arn:aws:sns:us-west-2:933693344490:opsee-cfn-callback\",\"ResponseURL\":\"https://cloudformation-custom-resource-response-uswest2.s3-us-west-2.amazonaws.com/arn%3Aaws%3Acloudformation%3Aus-west-2%3A933693344490%3Astack/opsee-role-stack-greg-test-blah/55c35420-067a-11e6-91a2-503f20f2ad1e%7COpseeNotification%7Ccb46085e-b829-4567-81b8-9f5dd0755c2a?AWSAccessKeyId=AKIAI4KYMPPRGIACET5Q&Expires=1461110596&Signature=WW7JkaF9Nz3jxH90anYrSYZmTww%3D\",\"StackId\":\"arn:aws:cloudformation:us-west-2:933693344490:stack/opsee-role-stack-greg-test-blah/55c35420-067a-11e6-91a2-503f20f2ad1e\",\"RequestId\":\"cb46085e-b829-4567-81b8-9f5dd0755c2a\",\"LogicalResourceId\":\"OpseeNotification\",\"ResourceType\":\"Custom::OpseeNotificationResource\",\"ResourceProperties\":{\"ServiceToken\":\"arn:aws:sns:us-west-2:933693344490:opsee-cfn-callback\",\"RoleExternalID\":\"{{ .User.ExternalID }}\",\"RoleARN\":\"arn:aws:iam::933693344490:role/opsee-role-stack-greg-test-blah-OpseeRole-1ULQTXA2L7RLE\",\"StackName\":\"opsee-role-stack-greg-test-blah\",\"StackID\":\"arn:aws:cloudformation:us-west-2:933693344490:stack/opsee-role-stack-greg-test-blah/55c35420-067a-11e6-91a2-503f20f2ad1e\"}}",
+  "Timestamp" : "2016-04-19T22:03:16.248Z",
+  "SignatureVersion" : "1",
+  "Signature" : "T1F35l+J4GuUt9VDqk5JAd9c14M0sPJrBSFrbyPeXPiXBdLZov5X7/eywPqISvD6oQXR8p0I5MVMxPPNfINNS+nV8sfJ3AEqtMV+XGN3AFDg4Z8yPHmbd4w90i7XNQSLXjsj7BrE6TwLHysJFQ7bspo9agN0pvyoeSjwv+8Jawhea+wq46jRgnl/UcUIn1G3a2P0qYmzrkVvmVN5mBXWjllCGUY0VxHtmU9/ZQOK9jk3n4NyterYq3p5FQDN61URzog07jx5XaOchXblaF4EwT9mKyn8Yg/dQ6wFHsIpB7GsPg89UJPkdmmPp7fAezALGfD+sBYixgUYN1w77wgK8A==",
+  "SigningCertURL" : "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-bb750dd426d95ee9390147a5624348ee.pem",
+  "UnsubscribeURL" : "https://sns.us-west-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-west-2:933693344490:opsee-cfn-callback:0263cdc7-1a80-4c62-835d-e422fc931962"
+}
+*/
+
+func (s *service) startSQSListener() {
+	sqsClient := sqs.New(session.New())
+	NewPoller(sqsClient,
+		"https://sqs.us-west-2.amazonaws.com/933693344490/opsee-cfn-callback",
+		func(msg string) error {
+			notif := &CFNotification{}
+
+			if err := json.Unmarshal([]byte(msg), notif); err != nil {
+				return err
+			}
+			return s.handleCFNCallback(notif)
+		}).Poll()
 }
 
 // EnhancedCombatMode returns a URL to a CFN template in a specified region
