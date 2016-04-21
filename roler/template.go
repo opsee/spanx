@@ -33,7 +33,7 @@ const RoleTemplate = `{
             "Action": "sts:AssumeRole",
             "Condition": {
               "StringEquals": {
-              "sts:ExternalId": "{{ .User.ExternalID }}"
+              "sts:ExternalId": "{{ .ExternalID }}"
               }
             }
           }]
@@ -175,7 +175,7 @@ const RoleTemplate = `{
       "DependsOn": "OpseeRole",
       "Properties": {
         "ServiceToken": { "Fn::FindInMap": ["ServiceTokenMap", { "Ref": "AWS::Region" }, "ServiceToken"] },
-        "RoleExternalID": "{{ .User.ExternalID }}",
+        "RoleExternalID": "{{ .ExternalID }}",
         "RoleARN": { "Fn::GetAtt": [ "OpseeRole", "Arn" ] },
         "StackID": { "Ref": "AWS::StackId" },
         "StackName": { "Ref": "AWS::StackName" }
