@@ -120,7 +120,7 @@ func (s *service) EnhancedCombatMode(ctx context.Context, req *opsee.EnhancedCom
 	if err != nil {
 		log.WithFields(log.Fields{
 			"customer_id": req.User.CustomerId,
-			"endpoint":    "PutRole",
+			"endpoint":    "EnhancedCombatMode",
 		}).WithError(err).Error("Error getting URL for customer.")
 		return nil, errors.New("Error getting URL for customer.")
 	}

@@ -153,6 +153,7 @@ func GetStackURL(db store.Store, customerID, region string) (string, error) {
 
 	_, err = s3Client.PutObject(&s3.PutObjectInput{
 		Bucket:       aws.String(cfnBucketName),
+		Key:          aws.String(getS3Object(customerID, account.ExternalID)),
 		ContentType:  aws.String("application/json"),
 		Body:         bytes.NewReader(out.Bytes()),
 		ACL:          aws.String(s3.ObjectCannedACLAuthenticatedRead),
