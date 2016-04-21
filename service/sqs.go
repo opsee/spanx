@@ -57,9 +57,9 @@ func (p *Poller) Poll() {
 				time.Sleep(10 * time.Second)
 			}
 
-			entries := make([]*sqs.DeleteMessageBatchRequestEntry, pollerMaxMessageCount)
+			var entries []*sqs.DeleteMessageBatchRequestEntry
 
-			for i, msg := range resp.Messages {
+			for _, msg := range resp.Messages {
 				senderID := aws.StringValue(msg.Attributes["SenderId"])
 				messageID := aws.StringValue(msg.MessageId)
 				sentTimestamp := aws.StringValue(msg.Attributes["SentTimestamp"])
@@ -91,10 +91,10 @@ func (p *Poller) Poll() {
 					continue
 				}
 
-				entries[i] = &sqs.DeleteMessageBatchRequestEntry{
+				entries = append(entries, &sqs.DeleteMessageBatchRequestEntry{
 					ReceiptHandle: msg.ReceiptHandle,
 					Id:            msg.MessageId,
-				}
+				})
 			}
 
 			if len(entries) > 0 {
