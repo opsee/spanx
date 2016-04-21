@@ -123,7 +123,7 @@ func (pg *Postgres) GetStack(customerID, externalID string) (*Stack, error) {
 	stack := &Stack{}
 	err := pg.db.Get(
 		stack,
-		"select * from stacks where external_id = $1 and customer_id = $2 limit 1",
+		"select * from role_stacks where external_id = $1 and customer_id = $2 limit 1",
 		externalID,
 		customerID,
 	)
@@ -171,7 +171,7 @@ func (pg *Postgres) DeleteStack(stack *Stack) error {
 func (pg *Postgres) putStack(x sqlx.Ext, stack *Stack) error {
 	_, err := sqlx.NamedExec(
 		x,
-		`insert into stacks (external_id, customer_id, stack_id, stack_name, active) values (:external_id, :customer_id, :stack_id, :stack_name, :active)`,
+		`insert into role_stacks (external_id, customer_id, stack_id, stack_name, active) values (:external_id, :customer_id, :stack_id, :stack_name, :active)`,
 		stack,
 	)
 	return err
@@ -180,7 +180,7 @@ func (pg *Postgres) putStack(x sqlx.Ext, stack *Stack) error {
 func (pg *Postgres) deleteStack(x sqlx.Ext, stack *Stack) error {
 	_, err := sqlx.NamedExec(
 		x,
-		`delete from stacks where external_id = :external_id and customer_id = :customer_id`,
+		`delete from role_stacks where external_id = :external_id and customer_id = :customer_id`,
 		stack,
 	)
 	return err
