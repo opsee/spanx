@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"net"
+	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/opsee/basic/schema/aws/credentials"
@@ -70,7 +72,22 @@ func (s *service) Start(listenAddr, cert, certkey string) error {
 */
 
 func (s *service) startSQSListener() {
-	sqsClient := sqs.New(session.New())
+	var region string
+
+	region = os.Getenv("AWS_DEFAULT_REGION")
+
+	if region == "" {
+		region = os.Getenv("AWS_REGION")
+	}
+
+	if region == "" {
+		mdc := ec2metadata.New(session.New())
+		if mdc.Available() {
+			region, _ = mdc.Region()
+		}
+	}
+
+	sqsClient := sqs.New(session.New(aws.NewConfig().WithRegion(region)))
 	NewPoller(sqsClient,
 		"https://sqs.us-west-2.amazonaws.com/933693344490/opsee-cfn-callback",
 		func(msg string) error {

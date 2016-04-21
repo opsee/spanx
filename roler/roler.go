@@ -49,8 +49,6 @@ func init() {
 		creds   *credentials.Credentials
 	)
 
-	s3Client = s3.New(session.New())
-
 	ec2meta = ec2metadata.New(session.New())
 	if ec2meta.Available() {
 		// ignoring error here since we'll try to get region from env later
@@ -75,6 +73,8 @@ func init() {
 		MaxRetries:  aws.Int(11),
 		Region:      aws.String(region),
 	})
+
+	s3Client = s3.New(awsSession)
 }
 
 func getS3Object(customerID, externalID string) string {

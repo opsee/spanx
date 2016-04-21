@@ -44,60 +44,72 @@ func NewPoller(sqs *sqs.SQS, url string, handler MessageHandler) *Poller {
 }
 
 func (p *Poller) Poll() {
-	for {
-		resp, err := p.client.ReceiveMessage(&sqs.ReceiveMessageInput{
-			QueueUrl:            aws.String(p.queueURL),
-			AttributeNames:      []*string{aws.String("All")},
-			MaxNumberOfMessages: aws.Int64(pollerMaxMessageCount),
-			WaitTimeSeconds:     aws.Int64(20),
-		})
-		if err != nil {
-			log.WithError(err).Error("Error calling SQS ReceiveMessage")
-		}
-
-		entries := make([]*sqs.DeleteMessageBatchRequestEntry, pollerMaxMessageCount)
-
-		for i, msg := range resp.Messages {
-			senderID := aws.StringValue(msg.Attributes["SenderId"])
-			messageID := aws.StringValue(msg.MessageId)
-			sentTimestamp := aws.StringValue(msg.Attributes["SentTimestamp"])
-			sentTsInt, err := strconv.ParseInt(sentTimestamp, 10, 64)
+	go func() {
+		for {
+			resp, err := p.client.ReceiveMessage(&sqs.ReceiveMessageInput{
+				QueueUrl:            aws.String(p.queueURL),
+				AttributeNames:      []*string{aws.String("All")},
+				MaxNumberOfMessages: aws.Int64(pollerMaxMessageCount),
+				WaitTimeSeconds:     aws.Int64(20),
+			})
 			if err != nil {
-				log.WithError(err).Errorf("Unable to parse sent timestamp from SQS message: %s", sentTimestamp)
+				log.WithError(err).Error("Error calling SQS ReceiveMessage")
+				time.Sleep(10 * time.Second)
 			}
 
-			now := time.Now()
-			sent := time.Unix(sentTsInt, 0)
-			delay := now.Sub(sent)
+			entries := make([]*sqs.DeleteMessageBatchRequestEntry, pollerMaxMessageCount)
 
-			log.WithFields(log.Fields{
-				"message_id": messageID,
-				"sender_id":  senderID,
-				"sent":       sent.String(),
-				"delay_ms":   int64(delay / time.Millisecond),
-				"message":    msg,
-			}).Info("Received message from SQS.")
+			for i, msg := range resp.Messages {
+				senderID := aws.StringValue(msg.Attributes["SenderId"])
+				messageID := aws.StringValue(msg.MessageId)
+				sentTimestamp := aws.StringValue(msg.Attributes["SentTimestamp"])
+				sentTsInt, err := strconv.ParseInt(sentTimestamp, 10, 64)
+				if err != nil {
+					log.WithError(err).Errorf("Unable to parse sent timestamp from SQS message: %s", sentTimestamp)
+					time.Sleep(10)
+					continue
+				}
 
-			if err := p.handler(aws.StringValue(msg.Body)); err != nil {
+				now := time.Now()
+				sent := time.Unix(sentTsInt, 0)
+				delay := now.Sub(sent)
+
 				log.WithFields(log.Fields{
 					"message_id": messageID,
 					"sender_id":  senderID,
-				}).WithError(err).Error("Unable to handle message")
-				continue
+					"sent":       sent.String(),
+					"delay_ms":   int64(delay / time.Millisecond),
+					"message":    msg,
+				}).Info("Received message from SQS.")
+
+				if err := p.handler(aws.StringValue(msg.Body)); err != nil {
+					log.WithFields(log.Fields{
+						"message_id": messageID,
+						"sender_id":  senderID,
+					}).WithError(err).Error("Unable to handle message")
+					time.Sleep(30)
+					continue
+				}
+
+				entries[i] = &sqs.DeleteMessageBatchRequestEntry{
+					ReceiptHandle: msg.ReceiptHandle,
+					Id:            msg.MessageId,
+				}
 			}
 
-			entries[i] = &sqs.DeleteMessageBatchRequestEntry{
-				ReceiptHandle: msg.ReceiptHandle,
-				Id:            msg.MessageId,
+			if len(entries) > 0 {
+				for i := 0; i < 10; i++ {
+					_, err = p.client.DeleteMessageBatch(&sqs.DeleteMessageBatchInput{
+						QueueUrl: aws.String(p.queueURL),
+						Entries:  entries,
+					})
+					if err != nil {
+						log.WithError(err).Error("Error calling SQS DeleteMessageBatch")
+						time.Sleep(10)
+						continue
+					}
+				}
 			}
 		}
-
-		_, err = p.client.DeleteMessageBatch(&sqs.DeleteMessageBatchInput{
-			QueueUrl: aws.String(p.queueURL),
-			Entries:  entries,
-		})
-		if err != nil {
-			log.WithError(err).Error("Error calling SQS DeleteMessageBatch")
-		}
-	}
+	}()
 }
