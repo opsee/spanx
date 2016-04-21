@@ -118,6 +118,10 @@ func (s *service) EnhancedCombatMode(ctx context.Context, req *opsee.EnhancedCom
 
 	url, err := roler.GetStackURL(s.db, req.User.CustomerId, req.Region)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"customer_id": req.User.CustomerId,
+			"endpoint":    "PutRole",
+		}).WithError(err).Error("Error getting URL for customer.")
 		return nil, errors.New("Error getting URL for customer.")
 	}
 
