@@ -66,7 +66,7 @@ func (p *Poller) Poll() {
 				sentTsInt, err := strconv.ParseInt(sentTimestamp, 10, 64)
 				if err != nil {
 					log.WithError(err).Errorf("Unable to parse sent timestamp from SQS message: %s", sentTimestamp)
-					time.Sleep(10)
+					time.Sleep(10 * time.Second)
 					continue
 				}
 
@@ -87,7 +87,7 @@ func (p *Poller) Poll() {
 						"message_id": messageID,
 						"sender_id":  senderID,
 					}).WithError(err).Error("Unable to handle message")
-					time.Sleep(30)
+					time.Sleep(30 * time.Second)
 					continue
 				}
 
@@ -105,8 +105,7 @@ func (p *Poller) Poll() {
 					})
 					if err != nil {
 						log.WithError(err).Error("Error calling SQS DeleteMessageBatch")
-						time.Sleep(10)
-						continue
+						time.Sleep(10 * time.Second)
 					}
 				}
 			}
