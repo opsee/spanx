@@ -74,7 +74,8 @@ func init() {
 		Region:      aws.String(region),
 	})
 
-	s3Client = s3.New(awsSession)
+	// opsee-bastion-cf is in us-east-1
+	s3Client = s3.New(session.New(aws.NewConfig().WithRegion("us-east-1")))
 }
 
 func getS3Object(customerID, externalID string) string {
@@ -82,15 +83,8 @@ func getS3Object(customerID, externalID string) string {
 }
 
 // https://s3-us-west-2.amazonaws.com/yeobot/cf/8fb74362-983f-487b-98e5-f1f0c044cd45/34a39e06-31b9-4dfc-82ff-9629864910bb.cloudformation.json
-func getS3URL(region, customerID, externalID string) (*url.URL, error) {
-	var endpoint string
-	if region == "us-east-1" {
-		endpoint = "s3.amazonaws.com"
-	} else {
-		endpoint = fmt.Sprintf("s3-%s.amazonaw.com", region)
-	}
-
-	u, err := url.Parse(fmt.Sprintf("https://%s", endpoint))
+func getS3URL(customerID, externalID string) (*url.URL, error) {
+	u, err := url.Parse("https://s3.amazonaws.com")
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +157,7 @@ func GetStackURL(db store.Store, customerID, region string) (string, error) {
 		return "", err
 	}
 
-	s3URL, err := getS3URL(region, account.CustomerID, account.ExternalID)
+	s3URL, err := getS3URL(account.CustomerID, account.ExternalID)
 	if err != nil {
 		return "", err
 	}
