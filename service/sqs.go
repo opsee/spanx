@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -17,7 +16,7 @@ const (
 // A Poller is a generic SQS poller that does 20-second long-polling in a
 // separate goroutine.
 type Poller struct {
-	client   sqsiface.SQSAPI
+	client   *sqs.SQS
 	queueURL string
 	handler  MessageHandler
 	msgChan  chan interface{}
@@ -32,7 +31,7 @@ type Poller struct {
 type MessageHandler func(string) error
 
 // NewPoller creates and starts a poller for the specified SQS queue at `url`.
-func NewPoller(sqs sqsiface.SQSAPI, url string, handler MessageHandler) *Poller {
+func NewPoller(sqs *sqs.SQS, url string, handler MessageHandler) *Poller {
 	p := &Poller{
 		client:   sqs,
 		queueURL: url,
