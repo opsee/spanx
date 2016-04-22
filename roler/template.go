@@ -4,7 +4,7 @@ package roler
 
 const RoleTemplate = `{
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "The Opsee Stack",
+  "Description": "The Opsee role stack for cross-account access",
   "Mappings": {
     "ServiceTokenMap": {
       "eu-east-1": { "ServiceToken": "arn:aws:sns:us-east-1:933693344490:opsee-cfn-callback" },

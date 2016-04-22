@@ -28,7 +28,7 @@ func (pg *Postgres) PutAccount(account *com.Account) error {
 	return pg.putAccount(pg.db, account)
 }
 
-func (pg *Postgres) UpdateAccount(oldAccount *com.Account, account *com.Account) error {
+func (pg *Postgres) ReplaceAccount(oldAccount *com.Account, account *com.Account) error {
 	tx, err := pg.db.Beginx()
 	if err != nil {
 		return err
@@ -49,8 +49,38 @@ func (pg *Postgres) UpdateAccount(oldAccount *com.Account, account *com.Account)
 	return tx.Commit()
 }
 
+// UpdateAccount only replaces active and role_arn on an account, because
+// really those should be the only two mutable fields.
+func (pg *Postgres) UpdateAccount(account *com.Account) error {
+	_, err := sqlx.NamedExec(
+		pg.db,
+		`update accounts set active = :active, role_arn = :role_arn where id = :id and customer_id = :customer_id`,
+		account,
+	)
+	return err
+}
+
 func (pg *Postgres) DeleteAccount(account *com.Account) error {
 	return pg.deleteAccount(pg.db, account)
+}
+
+func (pg *Postgres) GetAccountByCustomerID(customerID string) (*com.Account, error) {
+	account := &com.Account{}
+	err := pg.db.Get(
+		account,
+		"select * from accounts where customer_id = $1 limit 1",
+		customerID,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return account, nil
 }
 
 func (pg *Postgres) GetAccountByExternalID(externalID string) (*com.Account, error) {

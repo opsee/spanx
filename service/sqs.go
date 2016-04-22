@@ -1,7 +1,7 @@
 package service
 
 import (
-	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -62,24 +62,11 @@ func (p *Poller) Poll() {
 			for _, msg := range resp.Messages {
 				senderID := aws.StringValue(msg.Attributes["SenderId"])
 				messageID := aws.StringValue(msg.MessageId)
-				sentTimestamp := aws.StringValue(msg.Attributes["SentTimestamp"])
-				sentTsInt, err := strconv.ParseInt(sentTimestamp, 10, 64)
-				if err != nil {
-					log.WithError(err).Errorf("Unable to parse sent timestamp from SQS message: %s", sentTimestamp)
-					time.Sleep(10 * time.Second)
-					continue
-				}
-
-				now := time.Now()
-				sent := time.Unix(sentTsInt, 0)
-				delay := now.Sub(sent)
 
 				log.WithFields(log.Fields{
 					"message_id": messageID,
 					"sender_id":  senderID,
-					"sent":       sent.String(),
-					"delay_ms":   int64(delay / time.Millisecond),
-					"message":    msg,
+					"message":    strings.Replace(aws.StringValue(msg.Body), "\n", " ", -1),
 				}).Info("Received message from SQS.")
 
 				if err := p.handler(aws.StringValue(msg.Body)); err != nil {

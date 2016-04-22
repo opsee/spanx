@@ -2,12 +2,13 @@ package service
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/opsee/basic/com"
 	"github.com/opsee/spanx/store"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -39,6 +40,7 @@ type CallbackMessage struct {
 	StackId            string                     `json:"StackId"`
 	RequestId          string                     `json:"RequestId"`
 	LogicalResourceId  string                     `json:"LogicalResourceId"`
+	PhysicalResourceId string                     `json:"PhysicalResourceId"`
 	ResourceType       string                     `json:"ResourceType"`
 	ResourceProperties CallbackResourceProperties `json:"ResourceProperties"`
 }
@@ -84,29 +86,62 @@ func (s *service) putCallbackResponse(response interface{}, url string) error {
 	return nil
 }
 
+func makeResponse(cbk CallbackMessage, success bool) *CallbackResponse {
+	response := &CallbackResponse{
+		LogicalResourceId: cbk.LogicalResourceId,
+		RequestId:         cbk.RequestId,
+		StackId:           cbk.StackId,
+	}
+
+	if success {
+		response.Status = "SUCCESS"
+		if cbk.PhysicalResourceId != "" {
+			response.PhysicalResourceId = cbk.PhysicalResourceId
+		} else {
+			response.PhysicalResourceId = cbk.ResourceProperties.RoleExternalID
+		}
+	} else {
+		response.Status = "FAILURE"
+		// I don't want to leak any information to an external party
+		// about why the request failed. All of the specific failure
+		// types are logged on our end.
+		response.Reason = "Error processing request."
+	}
+
+	return response
+
+}
+
 func (s *service) handleCFCreateRequest(cbk CallbackMessage) error {
 	var (
 		stack      *store.Stack
+		account    *com.Account
 		customerID string
 		err        error
 	)
 
 	externalID := cbk.ResourceProperties.RoleExternalID
 	if externalID == "" {
-		// Emit failure event to CFN
+		log.WithFields(log.Fields{
+			"request_id": cbk.RequestId,
+		}).Error("Callback does not contain an external ID.")
+		return s.putCallbackResponse(makeResponse(cbk, false), cbk.ResponseURL)
 	}
 
 	// 1. Get the Account object from the DB
-	account, err := s.db.GetAccountByExternalID(externalID)
+	account, err = s.db.GetAccountByExternalID(externalID)
 	if err != nil {
-		err = errors.New("Error getting external ID")
-		goto EMIT_RESPONSE
+		log.WithFields(log.Fields{
+			"request_id": cbk.RequestId,
+		}).Error("Error getting external ID")
+		return s.putCallbackResponse(makeResponse(cbk, false), cbk.ResponseURL)
 	}
 
-	// 2. If no account object, return create failed.
 	if account == nil {
-		err = errors.New("External ID not found.")
-		goto EMIT_RESPONSE
+		log.WithFields(log.Fields{
+			"request_id": cbk.RequestId,
+		}).Error("External ID not found.")
+		return s.putCallbackResponse(makeResponse(cbk, false), cbk.ResponseURL)
 	}
 
 	customerID = account.CustomerID
@@ -123,70 +158,145 @@ func (s *service) handleCFCreateRequest(cbk CallbackMessage) error {
 	}
 
 	if stack != nil {
-		if !stack.Active {
-			newStack := *stack
-			newStack.StackID = cbk.StackId
-			newStack.StackName = cbk.ResourceProperties.StackName
-			newStack.Active = true
-			s.db.UpdateStack(stack, &newStack)
-			goto EMIT_RESPONSE
+		log.WithFields(log.Fields{
+			"request_id":  cbk.RequestId,
+			"customer_id": customerID,
+			"external_id": externalID,
+		}).Info("Handling create for existing stack.")
+
+		newStack := *stack
+		newStack.StackID = cbk.StackId
+		newStack.StackName = cbk.ResourceProperties.StackName
+		newStack.Active = true
+		err = s.db.UpdateStack(stack, &newStack)
+		if err != nil {
+			return err
 		}
-	}
+	} else {
+		if cbk.StackId == "" {
+			log.WithFields(log.Fields{
+				"customer_id": customerID,
+				"external_id": externalID,
+				"request_id":  cbk.RequestId,
+			}).WithError(err).Error("Callback contained no stack ID.")
+			return s.putCallbackResponse(makeResponse(cbk, false), cbk.ResponseURL)
+		}
 
-	if cbk.StackId == "" {
-		return errors.New("Callback message contained no Stack ID.")
-	}
+		if cbk.ResourceProperties.StackName == "" {
+			log.WithFields(log.Fields{
+				"customer_id": customerID,
+				"external_id": externalID,
+				"request_id":  cbk.RequestId,
+			}).WithError(err).Error("Callback contained no stack name.")
+			return s.putCallbackResponse(makeResponse(cbk, false), cbk.ResponseURL)
+		}
 
-	if cbk.ResourceProperties.StackName == "" {
-		return errors.New("Callback contained no stack name.")
-	}
+		log.WithFields(log.Fields{
+			"customer_id": customerID,
+			"external_id": externalID,
+			"stack_id":    cbk.StackId,
+		}).Info("Handling create for new stack.")
 
-	stack = &store.Stack{
-		StackID:    cbk.StackId,
-		StackName:  cbk.ResourceProperties.StackName,
-		CustomerID: customerID,
-		ExternalID: externalID,
-		Active:     true,
-	}
+		stack = &store.Stack{
+			StackID:    cbk.StackId,
+			StackName:  cbk.ResourceProperties.StackName,
+			CustomerID: customerID,
+			ExternalID: externalID,
+			Active:     true,
+		}
 
-	err = s.db.PutStack(stack)
-	if err != nil {
-		return err
-	}
-
-	if !account.Active {
-		newAccount := *account
-		newAccount.Active = true
-		err = s.db.UpdateAccount(account, &newAccount)
+		err = s.db.PutStack(stack)
 		if err != nil {
 			return err
 		}
 	}
 
-EMIT_RESPONSE:
-	response := &CallbackResponse{
-		LogicalResourceId: cbk.LogicalResourceId,
-		RequestId:         cbk.RequestId,
-		StackId:           cbk.StackId,
-	}
-
+	account.Active = true
+	account.RoleARN = cbk.ResourceProperties.RoleARN
+	err = s.db.UpdateAccount(account)
 	if err != nil {
-		response.Status = "FAILURE"
-		response.Reason = err.Error()
-	} else {
-		response.Status = "SUCCESS"
-		response.PhysicalResourceId = externalID
+		return err
 	}
 
-	return s.putCallbackResponse(response, cbk.ResponseURL)
+	return s.putCallbackResponse(makeResponse(cbk, true), cbk.ResponseURL)
 }
 
+// We will eventually want some kind of role policy version for feature
+// gating. We can handle updating our internal policy version with this
+// method.
 func (s *service) handleCFUpdateRequest(cbk CallbackMessage) error {
-	return nil
+	externalID := cbk.ResourceProperties.RoleExternalID
+	if externalID == "" {
+		log.WithFields(log.Fields{
+			"request_id": cbk.RequestId,
+		}).Error("No external ID found in message.")
+		// This is sort of my janky way of trying to force a rollback if someone
+		// deletes the role in the stack. That's the only circumstance when I
+		// force an update failure and a rollback.
+		return s.putCallbackResponse(makeResponse(cbk, false), cbk.ResponseURL)
+	}
+
+	log.WithFields(log.Fields{
+		"request_id":  cbk.RequestId,
+		"external_id": externalID,
+	}).Info("Handling update request.")
+	return s.putCallbackResponse(makeResponse(cbk, true), cbk.ResponseURL)
 }
 
 func (s *service) handleCFDeleteRequest(cbk CallbackMessage) error {
-	return nil
+	externalID := cbk.ResourceProperties.RoleExternalID
+	if externalID == "" {
+		log.WithFields(log.Fields{
+			"request_id": cbk.RequestId,
+		}).Error("No external ID found in message.")
+		return s.putCallbackResponse(makeResponse(cbk, false), cbk.ResponseURL)
+	}
+
+	account, err := s.db.GetAccountByExternalID(externalID)
+	if err != nil {
+		return err
+	}
+
+	if account == nil {
+		log.WithFields(log.Fields{
+			"request_id":  cbk.RequestId,
+			"external_id": externalID,
+		}).WithError(err).Error("No account found.")
+		// Go ahead and ACK the delete request.
+		return s.putCallbackResponse(makeResponse(cbk, true), cbk.ResponseURL)
+	}
+
+	account.Active = false
+	err = s.db.UpdateAccount(account)
+	if err != nil {
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"request_id":  cbk.RequestId,
+		"external_id": externalID,
+		"customer_id": account.CustomerID,
+	}).Info("Deactivating account on delete request.")
+
+	stack, err := s.db.GetStack(account.CustomerID, account.ExternalID)
+	if err != nil {
+		return err
+	}
+
+	if stack == nil {
+		log.WithFields(log.Fields{
+			"request_id":  cbk.RequestId,
+			"external_id": externalID,
+			"customer_id": account.CustomerID,
+		}).Error("Unable to find stack for customer.")
+	} else {
+		err = s.db.DeleteStack(stack)
+		if err != nil {
+			return err
+		}
+	}
+
+	return s.putCallbackResponse(makeResponse(cbk, true), cbk.ResponseURL)
 }
 
 func (s *service) handleCFNCallback(msg *CFNotification) error {
