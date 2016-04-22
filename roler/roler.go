@@ -111,7 +111,7 @@ func GetStackURL(db store.Store, customerID, region string) (string, error) {
 		logger  = log.WithFields(log.Fields{"customer_id": customerID})
 	)
 
-	account, err = db.GetAccount(&store.GetAccountRequest{customerID, true})
+	account, err = db.GetAccountByCustomerID(customerID)
 	if err != nil {
 		return "", err
 	}
@@ -248,25 +248,6 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 	return getAccountCredentials(db, account)
 }
 
-func AddExternalId(db store.Store, customerID string, externalID string) (*com.Account, error) {
-	account, err := db.GetAccount(&store.GetAccountRequest{CustomerID: customerID, Active: true})
-	if err != nil {
-		log.WithFields(log.Fields{"customer_id": customerID}).WithError(err).Error("error getting account from db")
-		return nil, err
-	}
-
-	newAccount := *account
-	newAccount.ExternalID = externalID
-
-	err = db.UpdateAccount(account, &newAccount)
-	if err != nil {
-		log.WithFields(log.Fields{"customer_id": customerID}).WithError(err).Error("error getting account from db")
-		return nil, err
-	}
-
-	return account, nil
-}
-
 func GetCredentials(db store.Store, customerID string) (credentials.Value, error) {
 	account, err := db.GetAccount(&store.GetAccountRequest{CustomerID: customerID, Active: true})
 	if err != nil {
@@ -301,7 +282,7 @@ func resolveAccount(db store.Store, account *com.Account) error {
 
 	// a previous account, but not the same
 	if oldAccount.ID != account.ID {
-		return db.UpdateAccount(oldAccount, account)
+		return db.ReplaceAccount(oldAccount, account)
 	}
 
 	return nil
