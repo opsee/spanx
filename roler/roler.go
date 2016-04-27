@@ -94,17 +94,16 @@ func getS3URL(customerID, externalID string) (*url.URL, error) {
 	return u, nil
 }
 
-func getLaunchURL(region, stackName, s3URL string) string {
+func getLaunchURL(stackName, s3URL string) string {
 	return fmt.Sprintf(
-		"https://console.aws.amazon.com/cloudformation/home?region=%s#/stacks/new?stackName=%s&templateURL=%s",
-		region,
+		"https://console.aws.amazon.com/cloudformation/home?region=${region}#/stacks/new?stackName=%s&templateURL=%s",
 		stackName,
 		s3URL)
 }
 
 // geneate RoleTemplate in template.go
 // go:generate go run generate.go
-func GetStackURL(db store.Store, customerID, region string) (string, error) {
+func GetStackURLTemplate(db store.Store, customerID string) (string, error) {
 	var (
 		account *com.Account
 		err     error
@@ -164,7 +163,7 @@ func GetStackURL(db store.Store, customerID, region string) (string, error) {
 
 	logger.Infof("Uploaded role template to S3: %s", s3URL.String())
 
-	return getLaunchURL(region, fmt.Sprintf("opsee-role-%s", customerID), s3URL.String()), nil
+	return getLaunchURL(fmt.Sprintf("opsee-role-%s", customerID), s3URL.String()), nil
 }
 
 func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string) (credentials.Value, error) {
