@@ -32,6 +32,7 @@ type Stack struct {
 	CustomerID string    `json:"customer_id" db:"customer_id"`
 	StackID    string    `json:"stack_id" db:"stack_id"`
 	StackName  string    `json:"stack_name" db:"stack_name"`
+	Region     string    `json:"region" db:"region"`
 	Active     bool      `json:"active" db:"active"`
 	CreatedAt  time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at" db:"updated_at"`

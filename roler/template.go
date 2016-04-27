@@ -125,12 +125,22 @@ const RoleTemplate = `{
                 "elasticloadbalancing:DescribeInstanceHealth",
                 "elasticloadbalancing:DescribeLoadBalancerAttributes",
                 "elasticloadbalancing:DescribeLoadBalancers",
+                "rds:CreateEventSubscription",
                 "rds:DescribeAccountAttributes",
                 "rds:DescribeDBClusters",
                 "rds:DescribeDBInstances",
                 "rds:DescribeDBLogFiles",
                 "rds:DescribeDBSecurityGroups",
                 "rds:DescribeDBSubnetGroups",
+                "rds:DescribeDBClusterParameterGroups",
+                "rds:DescribeDBClusterParameters",
+                "rds:DescribeDBEngineVersions",
+                "rds:DescribeDBParameterGroups",
+                "rds:DescribeDBParameters",
+                "rds:DescribeDBSnapshots",
+                "rds:DescribeDBSnapshotAttributes",
+                "rds:DescribeEvents",
+                "rds:DescribePendingMaintenanceActions",
                 "route53:GetHostedZone",
                 "route53:ListHostedZones",
                 "route53:ListResourceRecordSets",
@@ -178,7 +188,8 @@ const RoleTemplate = `{
         "RoleExternalID": "{{ .ExternalID }}",
         "RoleARN": { "Fn::GetAtt": [ "OpseeRole", "Arn" ] },
         "StackID": { "Ref": "AWS::StackId" },
-        "StackName": { "Ref": "AWS::StackName" }
+        "StackName": { "Ref": "AWS::StackName" },
+				"Region": { "Ref": "AWS::Region" }
       }
     }
   }

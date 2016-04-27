@@ -51,6 +51,7 @@ type CallbackResourceProperties struct {
 	RoleARN        string `json:"RoleARN"`
 	StackName      string `json:"StackName"`
 	StackID        string `json:"StackID"`
+	Region         string `json:"Region"`
 }
 
 type CallbackResponse struct {
@@ -168,6 +169,7 @@ func (s *service) handleCFCreateRequest(cbk CallbackMessage) error {
 		newStack.StackID = cbk.StackId
 		newStack.StackName = cbk.ResourceProperties.StackName
 		newStack.Active = true
+		newStack.Region = cbk.ResourceProperties.Region
 		err = s.db.UpdateStack(stack, &newStack)
 		if err != nil {
 			return err
@@ -202,6 +204,7 @@ func (s *service) handleCFCreateRequest(cbk CallbackMessage) error {
 			StackName:  cbk.ResourceProperties.StackName,
 			CustomerID: customerID,
 			ExternalID: externalID,
+			Region:     cbk.ResourceProperties.Region,
 			Active:     true,
 		}
 
