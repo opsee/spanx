@@ -103,10 +103,6 @@ func (s *service) startSQSListener() {
 // EnhancedCombatMode returns a URL to a CFN template in a specified region
 // that a customer can use to launch a role.
 func (s *service) EnhancedCombatMode(ctx context.Context, req *opsee.EnhancedCombatModeRequest) (*opsee.EnhancedCombatModeResponse, error) {
-	if req.Region == "" {
-		return nil, errMissingRegion
-	}
-
 	if req.User == nil {
 		return nil, errUnauthorized
 	}
@@ -116,13 +112,13 @@ func (s *service) EnhancedCombatMode(ctx context.Context, req *opsee.EnhancedCom
 		"endpoint":    "EnhancedCombatMode",
 	}).Info("grpc request")
 
-	url, err := roler.GetStackURL(s.db, req.User.CustomerId, req.Region)
+	url, err := roler.GetStackURLTemplate(s.db, req.User.CustomerId)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"customer_id": req.User.CustomerId,
 			"endpoint":    "EnhancedCombatMode",
-		}).WithError(err).Error("Error getting URL for customer.")
-		return nil, errors.New("Error getting URL for customer.")
+		}).WithError(err).Error("Error getting URL template for customer.")
+		return nil, errors.New("Error getting URL template for customer.")
 	}
 
 	return &opsee.EnhancedCombatModeResponse{url}, nil
