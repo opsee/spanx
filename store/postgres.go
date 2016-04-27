@@ -201,7 +201,7 @@ func (pg *Postgres) DeleteStack(stack *Stack) error {
 func (pg *Postgres) putStack(x sqlx.Ext, stack *Stack) error {
 	_, err := sqlx.NamedExec(
 		x,
-		`insert into role_stacks (external_id, customer_id, stack_id, stack_name, active) values (:external_id, :customer_id, :stack_id, :stack_name, :active)`,
+		`insert into role_stacks (external_id, customer_id, stack_id, stack_name, region, active) values (:external_id, :customer_id, :stack_id, :stack_name, :region, :active)`,
 		stack,
 	)
 	return err
