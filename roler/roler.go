@@ -97,8 +97,8 @@ func getS3URL(customerID, externalID string) (*url.URL, error) {
 func getLaunchURL(stackName, s3URL string) string {
 	return fmt.Sprintf(
 		"https://console.aws.amazon.com/cloudformation/home?region=${region}#/stacks/new?stackName=%s&templateURL=%s",
-		stackName,
-		s3URL)
+		url.QueryEscape(stackName),
+		url.QueryEscape(s3URL))
 }
 
 // geneate RoleTemplate in template.go
