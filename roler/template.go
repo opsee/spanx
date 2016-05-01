@@ -146,6 +146,14 @@ const RoleTemplate = `{
                 "route53:ListResourceRecordSets",
                 "route53domains:GetDomainDetail",
                 "route53domains:ListDomains",
+                "sqs:CreateQueue",
+                "sqs:DeleteQueue",
+                "sqs:DeleteMessage",
+                "sqs:ListQueues",
+                "sqs:ReceiveMessage",
+                "sqs:SendMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:SetQueueAttributes",
                 "sns:CreateTopic",
                 "sns:DeleteTopic",
                 "sns:Subscribe",
@@ -189,7 +197,7 @@ const RoleTemplate = `{
         "RoleARN": { "Fn::GetAtt": [ "OpseeRole", "Arn" ] },
         "StackID": { "Ref": "AWS::StackId" },
         "StackName": { "Ref": "AWS::StackName" },
-				"Region": { "Ref": "AWS::Region" }
+        "Region": { "Ref": "AWS::Region" }
       }
     }
   }
