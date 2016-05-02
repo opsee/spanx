@@ -44,6 +44,7 @@ const RoleTemplate = `{
             "Statement": [{
               "Effect": "Allow",
               "Action": [
+                "autoscaling:CompleteLifecycleAction",
                 "autoscaling:DescribeAccountLimits",
                 "autoscaling:DescribeAdjustmentTypes",
                 "autoscaling:DescribeAutoScalingNotificationTypes",
@@ -63,7 +64,13 @@ const RoleTemplate = `{
                 "autoscaling:DescribeLoadBalancers",
                 "autoscaling:CreateLaunchConfiguration",
                 "autoscaling:DeleteLaunchConfiguration",
+                "autoscaling:CreateAutoScalingGroup",
+                "autoscaling:CreateOrUpdateTags",
+                "autoscaling:DeleteAutoScalingGroup",
                 "autoscaling:UpdateAutoScalingGroup",
+                "autoscaling:ResumeProcesses",
+                "autoscaling:SetDesiredCapacity",
+                "autoscaling:SuspendProcesses",
                 "autoscaling:TerminateInstanceInAutoScalingGroup",
                 "cloudfront:ListDistributions",
                 "cloudfront:ListStreamingDistributions",
