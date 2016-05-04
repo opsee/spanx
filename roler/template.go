@@ -7,7 +7,7 @@ const RoleTemplate = `{
   "Description": "The Opsee role stack for cross-account access",
   "Mappings": {
     "ServiceTokenMap": {
-      "eu-east-1": { "ServiceToken": "arn:aws:sns:us-east-1:933693344490:opsee-cfn-callback" },
+      "us-east-1": { "ServiceToken": "arn:aws:sns:us-east-1:933693344490:opsee-cfn-callback" },
       "us-west-1": { "ServiceToken": "arn:aws:sns:us-west-1:933693344490:opsee-cfn-callback" },
       "us-west-2": { "ServiceToken": "arn:aws:sns:us-west-2:933693344490:opsee-cfn-callback" },
       "eu-west-1": { "ServiceToken": "arn:aws:sns:us-west-1:933693344490:opsee-cfn-callback" },
