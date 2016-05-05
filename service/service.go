@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/opsee/basic/schema/aws/credentials"
 	opsee "github.com/opsee/basic/service"
+	opsee_types "github.com/opsee/protobuf/opseeproto/types"
 	"github.com/opsee/spanx/roler"
 	"github.com/opsee/spanx/store"
 	log "github.com/sirupsen/logrus"
@@ -124,6 +125,7 @@ func (s *service) EnhancedCombatMode(ctx context.Context, req *opsee.EnhancedCom
 	return &opsee.EnhancedCombatModeResponse{url}, nil
 }
 
+// this endpoint is deprecated
 func (s *service) PutRole(ctx context.Context, req *opsee.PutRoleRequest) (*opsee.PutRoleResponse, error) {
 	log.WithFields(log.Fields{
 		"customer_id": req.User.CustomerId,
@@ -137,9 +139,9 @@ func (s *service) PutRole(ctx context.Context, req *opsee.PutRoleRequest) (*opse
 
 	return &opsee.PutRoleResponse{
 		Credentials: &credentials.Value{
-			AccessKeyID:     aws.String(creds.AccessKeyID),
-			SecretAccessKey: aws.String(creds.SecretAccessKey),
-			SessionToken:    aws.String(creds.SessionToken),
+			AccessKeyID:     aws.String(creds.Value.AccessKeyID),
+			SecretAccessKey: aws.String(creds.Value.SecretAccessKey),
+			SessionToken:    aws.String(creds.Value.SessionToken),
 		},
 	}, nil
 }
@@ -155,11 +157,18 @@ func (s *service) GetCredentials(ctx context.Context, req *opsee.GetCredentialsR
 		return nil, errGettingCredentials
 	}
 
+	ts := &opsee_types.Timestamp{}
+	err = ts.Scan(creds.Expires)
+	if err != nil {
+		return nil, err
+	}
+
 	return &opsee.GetCredentialsResponse{
 		Credentials: &credentials.Value{
-			AccessKeyID:     aws.String(creds.AccessKeyID),
-			SecretAccessKey: aws.String(creds.SecretAccessKey),
-			SessionToken:    aws.String(creds.SessionToken),
+			AccessKeyID:     aws.String(creds.Value.AccessKeyID),
+			SecretAccessKey: aws.String(creds.Value.SecretAccessKey),
+			SessionToken:    aws.String(creds.Value.SessionToken),
 		},
+		Expires: ts,
 	}, nil
 }

@@ -30,7 +30,8 @@ import (
 )
 
 const (
-	cfnBucketName = "opsee-bastion-cf"
+	cfnBucketName  = "opsee-bastion-cf"
+	expiryDuration = 60 * time.Minute
 )
 
 var (
@@ -41,6 +42,11 @@ var (
 	AccountNotFound         = errors.New("AWS account for that customer not found.")
 	InsufficientPermissions = fmt.Errorf("IAM role or user provided has insufficient permissions to provision a role. The minimum policy required to launch Opsee is:\n%s", policies.UserPolicy)
 )
+
+type Credentials struct {
+	Expires time.Time
+	Value   credentials.Value
+}
 
 func init() {
 	var (
@@ -166,10 +172,10 @@ func GetStackURLTemplate(db store.Store, customerID string) (string, error) {
 	return getLaunchURL(fmt.Sprintf("opsee-role-%s", customerID), s3URL.String()), nil
 }
 
-func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string) (credentials.Value, error) {
+func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string) (Credentials, error) {
 	var (
 		account *com.Account
-		creds   credentials.Value
+		creds   Credentials
 		err     error
 		logger  = log.WithFields(log.Fields{"customer_id": customerID})
 	)
@@ -247,11 +253,11 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 	return getAccountCredentials(db, account)
 }
 
-func GetCredentials(db store.Store, customerID string) (credentials.Value, error) {
+func GetCredentials(db store.Store, customerID string) (Credentials, error) {
 	account, err := db.GetAccount(&store.GetAccountRequest{CustomerID: customerID, Active: true})
 	if err != nil {
 		log.WithFields(log.Fields{"customer_id": customerID}).WithError(err).Error("error getting account from db")
-		return credentials.Value{}, err
+		return Credentials{}, err
 	}
 
 	return getAccountCredentials(db, account)
@@ -287,56 +293,56 @@ func resolveAccount(db store.Store, account *com.Account) error {
 	return nil
 }
 
-func getAccountCredentials(db store.Store, account *com.Account) (credentials.Value, error) {
+func getAccountCredentials(db store.Store, account *com.Account) (Credentials, error) {
 	var (
 		creds credentials.Value
 		err   error
 	)
 
-	if account != nil {
-		backoff.Retry(func() error {
-			var (
-				arn        string
-				externalID string
-			)
+	if account == nil {
+		return Credentials{}, AccountNotFound
+	}
 
-			if account.RoleARN != "" {
-				arn = account.RoleARN
-				externalID = account.ExternalID
-			} else {
-				arn = account.ComputedRoleARN()
-				externalID = account.CustomerID
-			}
+	backoff.Retry(func() error {
+		var (
+			arn        string
+			externalID string
+		)
 
-			creds, err = stscreds.NewCredentials(awsSession, arn, func(arp *stscreds.AssumeRoleProvider) {
-				arp.ExternalID = aws.String(externalID)
-				arp.Duration = 60 * time.Minute
-			}).Get()
-
-			if err != nil {
-				return err
-			}
-
-			err = nil
-			return nil
-
-		}, &backoff.ExponentialBackOff{
-			InitialInterval:     100 * time.Millisecond,
-			RandomizationFactor: 0.5,
-			Multiplier:          1.5,
-			MaxInterval:         time.Second,
-			MaxElapsedTime:      10 * time.Second,
-			Clock:               &systemClock{},
-		})
-
-		if err != nil {
-			log.WithFields(log.Fields{"customer_id": account.CustomerID}).WithError(err).Error("error fetching credentials from AWS")
+		if account.RoleARN != "" {
+			arn = account.RoleARN
+			externalID = account.ExternalID
+		} else {
+			arn = account.ComputedRoleARN()
+			externalID = account.CustomerID
 		}
 
-		return creds, err
-	} else {
-		return creds, AccountNotFound
+		creds, err = stscreds.NewCredentials(awsSession, arn, func(arp *stscreds.AssumeRoleProvider) {
+			arp.ExternalID = aws.String(externalID)
+			arp.Duration = expiryDuration
+		}).Get()
+
+		if err != nil {
+			return err
+		}
+
+		err = nil
+		return nil
+
+	}, &backoff.ExponentialBackOff{
+		InitialInterval:     100 * time.Millisecond,
+		RandomizationFactor: 0.5,
+		Multiplier:          1.5,
+		MaxInterval:         time.Second,
+		MaxElapsedTime:      10 * time.Second,
+		Clock:               &systemClock{},
+	})
+
+	if err != nil {
+		log.WithFields(log.Fields{"customer_id": account.CustomerID}).WithError(err).Error("error fetching credentials from AWS")
 	}
+
+	return Credentials{Expires: time.Now().UTC().Add(expiryDuration), Value: creds}, err
 }
 
 type systemClock struct{}
