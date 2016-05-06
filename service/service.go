@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/hashicorp/golang-lru"
 	"github.com/opsee/basic/schema/aws/credentials"
 	opsee "github.com/opsee/basic/service"
 	opsee_types "github.com/opsee/protobuf/opseeproto/types"
@@ -19,6 +20,10 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	grpcauth "google.golang.org/grpc/credentials"
+)
+
+const (
+	lruCacheSize = 2048
 )
 
 var (
@@ -32,11 +37,20 @@ var (
 )
 
 type service struct {
-	db store.Store
+	db  store.Store
+	lru *lru.Cache
 }
 
-func New(db store.Store) *service {
-	return &service{db}
+func New(db store.Store) (*service, error) {
+	lru, err := lru.New(lruCacheSize)
+	if err != nil {
+		return nil, err
+	}
+
+	return &service{
+		db:  db,
+		lru: lru,
+	}, nil
 }
 
 func (s *service) Start(listenAddr, cert, certkey string) error {
@@ -132,7 +146,7 @@ func (s *service) PutRole(ctx context.Context, req *opsee.PutRoleRequest) (*opse
 		"endpoint":    "PutRole",
 	}).Info("grpc request")
 
-	creds, err := roler.ResolveCredentials(s.db, req.User.CustomerId, req.Credentials.GetAccessKeyID(), req.Credentials.GetSecretAccessKey())
+	creds, err := roler.ResolveCredentials(s.db, s.lru, req.User.CustomerId, req.Credentials.GetAccessKeyID(), req.Credentials.GetSecretAccessKey())
 	if err != nil {
 		return nil, errSavingRole
 	}
@@ -152,7 +166,7 @@ func (s *service) GetCredentials(ctx context.Context, req *opsee.GetCredentialsR
 		"endpoint":    "GetCredentials",
 	}).Info("grpc request")
 
-	creds, err := roler.GetCredentials(s.db, req.User.CustomerId)
+	creds, err := roler.GetCredentials(s.db, s.lru, req.User.CustomerId)
 	if err != nil {
 		return nil, errGettingCredentials
 	}

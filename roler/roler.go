@@ -23,6 +23,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/cenkalti/backoff"
+	"github.com/hashicorp/golang-lru"
 	"github.com/opsee/basic/com"
 	"github.com/opsee/spanx/policies"
 	"github.com/opsee/spanx/store"
@@ -30,8 +31,9 @@ import (
 )
 
 const (
-	cfnBucketName  = "opsee-bastion-cf"
-	expiryDuration = 60 * time.Minute
+	cfnBucketName        = "opsee-bastion-cf"
+	expiryDuration       = 60 * time.Minute
+	expiryWindowDuration = 1 * time.Minute
 )
 
 var (
@@ -172,7 +174,8 @@ func GetStackURLTemplate(db store.Store, customerID string) (string, error) {
 	return getLaunchURL(fmt.Sprintf("opsee-role-%s", customerID), s3URL.String()), nil
 }
 
-func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string) (Credentials, error) {
+// ResolveCredentials is deprecated
+func ResolveCredentials(db store.Store, lru *lru.Cache, customerID, accessKey, secretKey string) (Credentials, error) {
 	var (
 		account *com.Account
 		creds   Credentials
@@ -250,19 +253,22 @@ func ResolveCredentials(db store.Store, customerID, accessKey, secretKey string)
 	}
 
 	// go ahead and return some creds
-	return getAccountCredentials(db, account)
+	return getAccountCredentials(db, lru, account)
 }
 
-func GetCredentials(db store.Store, customerID string) (Credentials, error) {
+// GetCredentials checks for the existence of an account in the db, then checks the lru for cached credentials
+// that have not expired. If none found, new credentials are fetched from STS, and stored in the lru.
+func GetCredentials(db store.Store, lru *lru.Cache, customerID string) (Credentials, error) {
 	account, err := db.GetAccount(&store.GetAccountRequest{CustomerID: customerID, Active: true})
 	if err != nil {
 		log.WithFields(log.Fields{"customer_id": customerID}).WithError(err).Error("error getting account from db")
 		return Credentials{}, err
 	}
 
-	return getAccountCredentials(db, account)
+	return getAccountCredentials(db, lru, account)
 }
 
+// DeleteCredentials removes the customer account record from the db, making STS creds fetching no longer possible
 func DeleteCredentials(db store.Store, customerID string) error {
 	account, err := db.GetAccount(&store.GetAccountRequest{CustomerID: customerID, Active: true})
 	if err != nil {
@@ -293,14 +299,25 @@ func resolveAccount(db store.Store, account *com.Account) error {
 	return nil
 }
 
-func getAccountCredentials(db store.Store, account *com.Account) (Credentials, error) {
+func getAccountCredentials(db store.Store, lru *lru.Cache, account *com.Account) (Credentials, error) {
 	var (
-		creds credentials.Value
-		err   error
+		credsValue credentials.Value
+		err        error
 	)
 
 	if account == nil {
 		return Credentials{}, AccountNotFound
+	}
+
+	if credsItem, ok := lru.Get(account.ID); ok {
+		if creds, ok := credsItem.(*Credentials); ok {
+			if creds.Expires.After(time.Now().UTC().Add(expiryWindowDuration)) {
+				log.WithFields(log.Fields{"customer_id": account.CustomerID}).Info("creds cache hit")
+				return *creds, nil
+			}
+
+			log.WithFields(log.Fields{"customer_id": account.CustomerID}).Info("creds cache miss: expired ", creds.Expires.String())
+		}
 	}
 
 	backoff.Retry(func() error {
@@ -317,7 +334,7 @@ func getAccountCredentials(db store.Store, account *com.Account) (Credentials, e
 			externalID = account.CustomerID
 		}
 
-		creds, err = stscreds.NewCredentials(awsSession, arn, func(arp *stscreds.AssumeRoleProvider) {
+		credsValue, err = stscreds.NewCredentials(awsSession, arn, func(arp *stscreds.AssumeRoleProvider) {
 			arp.ExternalID = aws.String(externalID)
 			arp.Duration = expiryDuration
 		}).Get()
@@ -340,9 +357,13 @@ func getAccountCredentials(db store.Store, account *com.Account) (Credentials, e
 
 	if err != nil {
 		log.WithFields(log.Fields{"customer_id": account.CustomerID}).WithError(err).Error("error fetching credentials from AWS")
+		return Credentials{}, err
 	}
 
-	return Credentials{Expires: time.Now().UTC().Add(expiryDuration), Value: creds}, err
+	creds := &Credentials{Expires: time.Now().UTC().Add(expiryDuration), Value: credsValue}
+	lru.Add(account.ID, creds)
+
+	return *creds, err
 }
 
 type systemClock struct{}

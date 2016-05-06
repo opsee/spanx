@@ -22,7 +22,11 @@ func main() {
 
 	log.Infof("service spanx starting grpc listener at %s", listenAddr)
 
-	svc := service.New(db)
+	svc, err := service.New(db)
+	if err != nil {
+		log.Fatal("Error initializing service: ", err)
+	}
+
 	log.Fatal(svc.Start(listenAddr, cert, certkey))
 }
 
