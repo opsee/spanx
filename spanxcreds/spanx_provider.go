@@ -23,7 +23,6 @@ var (
 
 type SpanxProvider struct {
 	credentials.Expiry
-	credentials.Value
 	user *schema.User
 
 	// Spanxclient for connecting to spanx service
