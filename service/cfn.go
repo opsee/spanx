@@ -281,6 +281,9 @@ func (s *service) handleCFDeleteRequest(cbk CallbackMessage) error {
 		"customer_id": account.CustomerID,
 	}).Info("Deactivating account on delete request.")
 
+	// firstly, remove any creds we have from the cache
+	s.lru.Remove(account.ID)
+
 	stack, err := s.db.GetStack(account.CustomerID, account.ExternalID)
 	if err != nil {
 		return err
