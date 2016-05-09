@@ -10,13 +10,13 @@ const RoleTemplate = `{
       "us-east-1": { "ServiceToken": "arn:aws:sns:us-east-1:933693344490:opsee-cfn-callback" },
       "us-west-1": { "ServiceToken": "arn:aws:sns:us-west-1:933693344490:opsee-cfn-callback" },
       "us-west-2": { "ServiceToken": "arn:aws:sns:us-west-2:933693344490:opsee-cfn-callback" },
-      "eu-west-1": { "ServiceToken": "arn:aws:sns:us-west-1:933693344490:opsee-cfn-callback" },
+      "eu-west-1": { "ServiceToken": "arn:aws:sns:eu-west-1:933693344490:opsee-cfn-callback" },
       "eu-central-1": { "ServiceToken": "arn:aws:sns:eu-central-1:933693344490:opsee-cfn-callback" },
       "ap-northeast-1": { "ServiceToken": "arn:aws:sns:ap-northeast-1:933693344490:opsee-cfn-callback" },
       "ap-northeast-2": { "ServiceToken": "arn:aws:sns:ap-northeast-2:933693344490:opsee-cfn-callback" },
       "ap-southeast-1": { "ServiceToken": "arn:aws:sns:ap-southeast-1:933693344490:opsee-cfn-callback" },
       "ap-southeast-2": { "ServiceToken": "arn:aws:sns:ap-southeast-2:933693344490:opsee-cfn-callback" },
-      "sa-east-1": { "ServiceToken": "arn:aws:sns:us-east-1:933693344490:opsee-cfn-callback" }
+      "sa-east-1": { "ServiceToken": "arn:aws:sns:sa-east-1:933693344490:opsee-cfn-callback" }
     }
   },
   "Resources": {
