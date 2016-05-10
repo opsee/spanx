@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/opsee/basic/com"
@@ -47,6 +48,7 @@ type CallbackMessage struct {
 
 type CallbackResourceProperties struct {
 	ServiceToken   string `json:"ServiceToken"`
+	AWSAccountID   string `json:"AWSAccountID"`
 	RoleExternalID string `json:"RoleExternalID"`
 	RoleARN        string `json:"RoleARN"`
 	StackName      string `json:"StackName"`
@@ -216,6 +218,13 @@ func (s *service) handleCFCreateRequest(cbk CallbackMessage) error {
 
 	account.Active = true
 	account.RoleARN = cbk.ResourceProperties.RoleARN
+
+	id, err := strconv.Atoi(cbk.ResourceProperties.AWSAccountID)
+	if err != nil {
+		return fmt.Errorf("Unable to parse AWS Account ID: %s", cbk.ResourceProperties.AWSAccountID)
+	}
+
+	account.ID = id
 	err = s.db.UpdateAccount(account)
 	if err != nil {
 		return err

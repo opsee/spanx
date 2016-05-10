@@ -305,7 +305,7 @@ func getAccountCredentials(db store.Store, lru *lru.Cache, account *com.Account)
 		err        error
 	)
 
-	if account == nil {
+	if account == nil || account.ID == 0 {
 		return Credentials{}, AccountNotFound
 	}
 
