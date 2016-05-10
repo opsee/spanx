@@ -57,6 +57,47 @@ func TestCache(t *testing.T) {
 	}
 }
 
+func TestGetAccountCredentials(t *testing.T) {
+	var (
+		err   error
+		creds Credentials
+	)
+
+	db := &testStore{}
+	lru, err := lru.New(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	lru.Add(975383256012, &Credentials{
+		Expires: time.Now().UTC().Add(90 * time.Second),
+		Value: credentials.Value{
+			AccessKeyID:     "666",
+			SecretAccessKey: "666",
+			SessionToken:    "666",
+		},
+	})
+
+	_, err = getAccountCredentials(db, lru, nil)
+	if err == nil {
+		t.Error("getAccountCredentials should not accept nil account: ", err.Error())
+	}
+
+	_, err = getAccountCredentials(db, lru, &com.Account{ID: 0})
+	if err == nil {
+		t.Error("getAccountCredentials should not accept account ID 0: ", err.Error())
+	}
+
+	creds, err = getAccountCredentials(db, lru, &com.Account{ID: 975383256012})
+	if err != nil {
+		t.Error("getAccountCredentials returned an error: ", err.Error())
+	}
+
+	if creds.Value.AccessKeyID != "666" {
+		t.Error("expected cached credentials, but got: ", creds.Value)
+	}
+}
+
 type testStore struct{}
 
 func (ts *testStore) PutAccount(_ *com.Account) error {
