@@ -4,6 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/hashicorp/golang-lru"
 	"github.com/opsee/basic/com"
+	"github.com/opsee/basic/schema"
 	"github.com/opsee/spanx/store"
 	"testing"
 	"time"
@@ -112,16 +113,19 @@ func (ts *testStore) ReplaceAccount(oldAccount, newAccount *com.Account) error {
 func (ts *testStore) DeleteAccount(_ *com.Account) error {
 	return nil
 }
-func (ts *testStore) GetStack(customerID, externalID string) (*store.Stack, error) {
+func (ts *testStore) GetStack(customerID, externalID string) (*schema.RoleStack, error) {
 	return nil, nil
 }
-func (ts *testStore) PutStack(_ *store.Stack) error {
+func (ts *testStore) GetStackByCustomerId(customerID string) (*schema.RoleStack, error) {
+	return nil, nil
+}
+func (ts *testStore) PutStack(_ *schema.RoleStack) error {
 	return nil
 }
-func (ts *testStore) UpdateStack(_ *store.Stack, _ *store.Stack) error {
+func (ts *testStore) UpdateStack(_ *schema.RoleStack, _ *schema.RoleStack) error {
 	return nil
 }
-func (ts *testStore) DeleteStack(_ *store.Stack) error {
+func (ts *testStore) DeleteStack(_ *schema.RoleStack) error {
 	return nil
 }
 func (ts *testStore) GetAccount(_ *store.GetAccountRequest) (*com.Account, error) {

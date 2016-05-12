@@ -1,9 +1,8 @@
 package store
 
 import (
-	"time"
-
 	"github.com/opsee/basic/com"
+	"github.com/opsee/basic/schema"
 )
 
 type Store interface {
@@ -12,10 +11,11 @@ type Store interface {
 	ReplaceAccount(oldAccount, newAccount *com.Account) error
 	DeleteAccount(*com.Account) error
 
-	GetStack(customerID, externalID string) (*Stack, error)
-	PutStack(*Stack) error
-	UpdateStack(*Stack, *Stack) error
-	DeleteStack(*Stack) error
+	GetStack(customerID, externalID string) (*schema.RoleStack, error)
+	GetStackByCustomerId(customerID string) (*schema.RoleStack, error)
+	PutStack(*schema.RoleStack) error
+	UpdateStack(*schema.RoleStack, *schema.RoleStack) error
+	DeleteStack(*schema.RoleStack) error
 
 	GetAccount(*GetAccountRequest) (*com.Account, error)
 	GetAccountByExternalID(string) (*com.Account, error)
@@ -25,15 +25,4 @@ type Store interface {
 type GetAccountRequest struct {
 	CustomerID string
 	Active     bool
-}
-
-type Stack struct {
-	ExternalID string    `json:"external_id" db:"external_id"`
-	CustomerID string    `json:"customer_id" db:"customer_id"`
-	StackID    string    `json:"stack_id" db:"stack_id"`
-	StackName  string    `json:"stack_name" db:"stack_name"`
-	Region     string    `json:"region" db:"region"`
-	Active     bool      `json:"active" db:"active"`
-	CreatedAt  time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at" db:"updated_at"`
 }

@@ -200,6 +200,7 @@ const RoleTemplate = `{
       "DependsOn": "OpseeRole",
       "Properties": {
         "ServiceToken": { "Fn::FindInMap": ["ServiceTokenMap", { "Ref": "AWS::Region" }, "ServiceToken"] },
+        "AWSAccountID": { "Ref": "AWS::AccountId" },
         "RoleExternalID": "{{ .ExternalID }}",
         "RoleARN": { "Fn::GetAtt": [ "OpseeRole", "Arn" ] },
         "StackID": { "Ref": "AWS::StackId" },

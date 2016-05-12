@@ -5,6 +5,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/opsee/basic/com"
+	"github.com/opsee/basic/schema"
 )
 
 type Postgres struct {
@@ -149,8 +150,8 @@ func (pg *Postgres) deleteAccount(x sqlx.Ext, account *com.Account) error {
 	return err
 }
 
-func (pg *Postgres) GetStack(customerID, externalID string) (*Stack, error) {
-	stack := &Stack{}
+func (pg *Postgres) GetStack(customerID, externalID string) (*schema.RoleStack, error) {
+	stack := &schema.RoleStack{}
 	err := pg.db.Get(
 		stack,
 		"select * from role_stacks where external_id = $1 and customer_id = $2 limit 1",
@@ -169,11 +170,30 @@ func (pg *Postgres) GetStack(customerID, externalID string) (*Stack, error) {
 	return stack, nil
 }
 
-func (pg *Postgres) PutStack(stack *Stack) error {
+func (pg *Postgres) GetStackByCustomerId(customerID string) (*schema.RoleStack, error) {
+	stack := &schema.RoleStack{}
+	err := pg.db.Get(
+		stack,
+		"select * from role_stacks where customer_id = $1 limit 1",
+		customerID,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return stack, nil
+}
+
+func (pg *Postgres) PutStack(stack *schema.RoleStack) error {
 	return pg.putStack(pg.db, stack)
 }
 
-func (pg *Postgres) UpdateStack(oldStack *Stack, stack *Stack) error {
+func (pg *Postgres) UpdateStack(oldStack *schema.RoleStack, stack *schema.RoleStack) error {
 	tx, err := pg.db.Beginx()
 	if err != nil {
 		return err
@@ -194,11 +214,11 @@ func (pg *Postgres) UpdateStack(oldStack *Stack, stack *Stack) error {
 	return tx.Commit()
 }
 
-func (pg *Postgres) DeleteStack(stack *Stack) error {
+func (pg *Postgres) DeleteStack(stack *schema.RoleStack) error {
 	return pg.deleteStack(pg.db, stack)
 }
 
-func (pg *Postgres) putStack(x sqlx.Ext, stack *Stack) error {
+func (pg *Postgres) putStack(x sqlx.Ext, stack *schema.RoleStack) error {
 	_, err := sqlx.NamedExec(
 		x,
 		`insert into role_stacks (external_id, customer_id, stack_id, stack_name, region, active) values (:external_id, :customer_id, :stack_id, :stack_name, :region, :active)`,
@@ -207,7 +227,7 @@ func (pg *Postgres) putStack(x sqlx.Ext, stack *Stack) error {
 	return err
 }
 
-func (pg *Postgres) deleteStack(x sqlx.Ext, stack *Stack) error {
+func (pg *Postgres) deleteStack(x sqlx.Ext, stack *schema.RoleStack) error {
 	_, err := sqlx.NamedExec(
 		x,
 		`delete from role_stacks where external_id = :external_id and customer_id = :customer_id`,

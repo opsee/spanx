@@ -139,25 +139,20 @@ func (s *service) EnhancedCombatMode(ctx context.Context, req *opsee.EnhancedCom
 	return &opsee.EnhancedCombatModeResponse{url}, nil
 }
 
-// this endpoint is deprecated
-func (s *service) PutRole(ctx context.Context, req *opsee.PutRoleRequest) (*opsee.PutRoleResponse, error) {
-	log.WithFields(log.Fields{
+func (s *service) GetRoleStack(ctx context.Context, req *opsee.GetRoleStackRequest) (*opsee.GetRoleStackResponse, error) {
+	logger := log.WithFields(log.Fields{
 		"customer_id": req.User.CustomerId,
-		"endpoint":    "PutRole",
-	}).Info("grpc request")
+		"endpoint":    "GetRoleStack",
+	})
+	logger.Info("grpc request")
 
-	creds, err := roler.ResolveCredentials(s.db, s.lru, req.User.CustomerId, req.Credentials.GetAccessKeyID(), req.Credentials.GetSecretAccessKey())
+	stack, err := s.db.GetStackByCustomerId(req.User.CustomerId)
 	if err != nil {
-		return nil, errSavingRole
+		logger.WithError(err).Error("error fetching role stack from db")
+		return nil, err
 	}
 
-	return &opsee.PutRoleResponse{
-		Credentials: &credentials.Value{
-			AccessKeyID:     aws.String(creds.Value.AccessKeyID),
-			SecretAccessKey: aws.String(creds.Value.SecretAccessKey),
-			SessionToken:    aws.String(creds.Value.SessionToken),
-		},
-	}, nil
+	return &opsee.GetRoleStackResponse{RoleStack: stack}, nil
 }
 
 func (s *service) GetCredentials(ctx context.Context, req *opsee.GetCredentialsRequest) (*opsee.GetCredentialsResponse, error) {
