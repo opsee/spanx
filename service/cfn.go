@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/opsee/basic/com"
-	"github.com/opsee/spanx/store"
+	"github.com/opsee/basic/schema"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -117,7 +117,7 @@ func makeResponse(cbk CallbackMessage, success bool) *CallbackResponse {
 
 func (s *service) handleCFCreateRequest(cbk CallbackMessage) error {
 	var (
-		stack      *store.Stack
+		stack      *schema.RoleStack
 		account    *com.Account
 		customerID string
 		err        error
@@ -168,7 +168,7 @@ func (s *service) handleCFCreateRequest(cbk CallbackMessage) error {
 		}).Info("Handling create for existing stack.")
 
 		newStack := *stack
-		newStack.StackID = cbk.StackId
+		newStack.StackId = cbk.StackId
 		newStack.StackName = cbk.ResourceProperties.StackName
 		newStack.Active = true
 		newStack.Region = cbk.ResourceProperties.Region
@@ -201,11 +201,11 @@ func (s *service) handleCFCreateRequest(cbk CallbackMessage) error {
 			"stack_id":    cbk.StackId,
 		}).Info("Handling create for new stack.")
 
-		stack = &store.Stack{
-			StackID:    cbk.StackId,
+		stack = &schema.RoleStack{
+			StackId:    cbk.StackId,
 			StackName:  cbk.ResourceProperties.StackName,
-			CustomerID: customerID,
-			ExternalID: externalID,
+			CustomerId: customerID,
+			ExternalId: externalID,
 			Region:     cbk.ResourceProperties.Region,
 			Active:     true,
 		}
