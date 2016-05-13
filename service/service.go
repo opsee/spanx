@@ -156,13 +156,15 @@ func (s *service) GetRoleStack(ctx context.Context, req *opsee.GetRoleStackReque
 }
 
 func (s *service) GetCredentials(ctx context.Context, req *opsee.GetCredentialsRequest) (*opsee.GetCredentialsResponse, error) {
-	log.WithFields(log.Fields{
+	logger := log.WithFields(log.Fields{
 		"customer_id": req.User.CustomerId,
 		"endpoint":    "GetCredentials",
-	}).Info("grpc request")
+	})
+	logger.Info("grpc request")
 
 	creds, err := roler.GetCredentials(s.db, s.lru, req.User.CustomerId)
 	if err != nil {
+		logger.WithError(err).Error("error getting credentials")
 		return nil, errGettingCredentials
 	}
 
