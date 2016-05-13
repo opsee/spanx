@@ -55,7 +55,7 @@ func (pg *Postgres) ReplaceAccount(oldAccount *com.Account, account *com.Account
 func (pg *Postgres) UpdateAccount(account *com.Account) error {
 	_, err := sqlx.NamedExec(
 		pg.db,
-		`update accounts set active = :active, role_arn = :role_arn where id = :id and customer_id = :customer_id`,
+		`update accounts set id = :id, active = :active, role_arn = :role_arn where external_id = :external_id and customer_id = :customer_id`,
 		account,
 	)
 	return err
