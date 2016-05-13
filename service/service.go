@@ -127,7 +127,7 @@ func (s *service) EnhancedCombatMode(ctx context.Context, req *opsee.EnhancedCom
 		"endpoint":    "EnhancedCombatMode",
 	}).Info("grpc request")
 
-	url, err := roler.GetStackURLTemplate(s.db, req.User.CustomerId)
+	templateURL, url, err := roler.GetStackURLs(s.db, req.User.CustomerId)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"customer_id": req.User.CustomerId,
@@ -136,7 +136,10 @@ func (s *service) EnhancedCombatMode(ctx context.Context, req *opsee.EnhancedCom
 		return nil, errors.New("Error getting URL template for customer.")
 	}
 
-	return &opsee.EnhancedCombatModeResponse{url}, nil
+	return &opsee.EnhancedCombatModeResponse{
+		StackUrl:    url,
+		TemplateUrl: templateURL,
+	}, nil
 }
 
 func (s *service) GetRoleStack(ctx context.Context, req *opsee.GetRoleStackRequest) (*opsee.GetRoleStackResponse, error) {

@@ -17,6 +17,7 @@ message EnhancedCombatModeRequest {
 
 message EnhancedCombatModeResponse {
 	string stack_url = 1;
+	string template_url = 2;
 }
 
 message GetRoleStackRequest {
