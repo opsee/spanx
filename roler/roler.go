@@ -102,16 +102,22 @@ func getS3URL(customerID, externalID string) (*url.URL, error) {
 	return u, nil
 }
 
-func getLaunchURL(stackName, s3URL string) string {
+func getLaunchURLs(stackName, s3URL string) (string, string) {
+	stackName = url.QueryEscape(stackName)
+	s3URL = url.QueryEscape(s3URL)
 	return fmt.Sprintf(
-		"https://console.aws.amazon.com/cloudformation/home?region=${region}#/stacks/new?stackName=%s&templateURL=%s",
-		url.QueryEscape(stackName),
-		url.QueryEscape(s3URL))
+			"https://console.aws.amazon.com/cloudformation/home?region=${region}#/stacks/new?stackName=%s&templateURL=%s",
+			stackName,
+			s3URL),
+		fmt.Sprintf(
+			"https://console.aws.amazon.com/cloudformation/home#/stacks/new?stackName=%s&templateURL=%s",
+			stackName,
+			s3URL)
 }
 
 // geneate RoleTemplate in template.go
 // go:generate go run generate.go
-func GetStackURLTemplate(db store.Store, customerID string) (string, error) {
+func GetStackURLs(db store.Store, customerID string) (string, string, error) {
 	var (
 		account *com.Account
 		err     error
@@ -120,7 +126,7 @@ func GetStackURLTemplate(db store.Store, customerID string) (string, error) {
 
 	account, err = db.GetAccountByCustomerID(customerID)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	if account == nil {
@@ -129,19 +135,19 @@ func GetStackURLTemplate(db store.Store, customerID string) (string, error) {
 			Active:     false,
 		})
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 
 		// Just let Postgres generate ExternalID for us.
 		account, err = db.GetAccount(&store.GetAccountRequest{customerID, false})
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 	}
 
 	tmpl := template.Must(template.New("role").Parse(RoleTemplate))
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	var out bytes.Buffer
@@ -149,7 +155,7 @@ func GetStackURLTemplate(db store.Store, customerID string) (string, error) {
 		ExternalID string
 	}{account.ExternalID})
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	_, err = s3Client.PutObject(&s3.PutObjectInput{
@@ -161,17 +167,18 @@ func GetStackURLTemplate(db store.Store, customerID string) (string, error) {
 		StorageClass: aws.String(s3.StorageClassReducedRedundancy),
 	})
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	s3URL, err := getS3URL(account.CustomerID, account.ExternalID)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	logger.Infof("Uploaded role template to S3: %s", s3URL.String())
+	templateURL, url := getLaunchURLs(fmt.Sprintf("opsee-role-%s", customerID), s3URL.String())
 
-	return getLaunchURL(fmt.Sprintf("opsee-role-%s", customerID), s3URL.String()), nil
+	return templateURL, url, nil
 }
 
 // ResolveCredentials is deprecated
