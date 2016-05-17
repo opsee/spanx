@@ -44,5 +44,6 @@ run: docker
 deploy-role:
 	docker run -it quay.io/opsee/spanx /roler | aws s3 cp --content-disposition inline --content-type application/json --region us-east-1 --acl public-read - s3://opsee-bastion-cf-us-east-1/beta/opsee-role.json
 	docker run -it quay.io/opsee/spanx /roler annotated | aws s3 cp --content-disposition inline --content-type text/plain --region us-east-1 --acl public-read - s3://opsee-bastion-cf-us-east-1/beta/opsee-role-annotated.json
+	docker run -it quay.io/opsee/spanx /roler stack | aws s3 cp --content-disposition inline --content-type text/plain --region us-east-1 --acl public-read - s3://opsee-bastion-cf-us-east-1/beta/opsee-role-stack.json
 
 .PHONY: docker run migrate clean all
