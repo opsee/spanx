@@ -23,14 +23,12 @@ func main() {
 			fmt.Println(policies.GetPolicyWithComments())
 		case "stack":
 			tmpl := template.Must(template.New("role").Parse(roler.RoleTemplate))
-			if err != nil {
-				log.Fatal("couldn't parse role template: ", err)
-			}
 
 			var out bytes.Buffer
-			err = tmpl.Execute(&out, struct {
+			err := tmpl.Execute(&out, struct {
 				ExternalID string
 			}{"YOUR_OPSEE_EXTERNAL_ID"})
+
 			if err != nil {
 				log.Fatal("couldn't execute role template: ", err)
 			}
