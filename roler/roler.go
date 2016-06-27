@@ -25,9 +25,9 @@ import (
 	"github.com/cenkalti/backoff"
 	"github.com/hashicorp/golang-lru"
 	"github.com/opsee/basic/com"
+	log "github.com/opsee/logrus"
 	"github.com/opsee/spanx/policies"
 	"github.com/opsee/spanx/store"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
