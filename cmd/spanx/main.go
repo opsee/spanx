@@ -1,10 +1,11 @@
 package main
 
 import (
+	"os"
+
+	log "github.com/opsee/logrus"
 	"github.com/opsee/spanx/service"
 	"github.com/opsee/spanx/store"
-	log "github.com/sirupsen/logrus"
-	"os"
 )
 
 func main() {
